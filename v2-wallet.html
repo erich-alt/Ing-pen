@@ -21,13 +21,17 @@
         const stage4Tag = '<script src="./v2-stage4.js?v=1"></scr' + 'ipt>';
         const analysisTag = '<script src="./v2-stage5-analysis.js?v=1"></scr' + 'ipt>';
         const importTag = '<script src="./v2-stage6-import.js?v=1"></scr' + 'ipt>';
+        const proTag = '<script src="./v2-stage7-pro.js?v=1"></scr' + 'ipt>';
+        const planningAnalysisTag = '<script src="./v2-stage8-planning-analysis.js?v=1"></scr' + 'ipt>';
         if(!html.includes('v2-stage3.js')) html = html.replace('</body>', walletTag + '\n</body>');
         if(!html.includes('v2-stage4.js')) html = html.replace('</body>', stage4Tag + '\n</body>');
         if(!html.includes('v2-stage5-analysis.js')) html = html.replace('</body>', analysisTag + '\n</body>');
         if(!html.includes('v2-stage6-import.js')) html = html.replace('</body>', importTag + '\n</body>');
+        if(!html.includes('v2-stage7-pro.js')) html = html.replace('</body>', proTag + '\n</body>');
+        if(!html.includes('v2-stage8-planning-analysis.js')) html = html.replace('</body>', planningAnalysisTag + '\n</body>');
         document.open(); document.write(html); document.close();
       }catch(e){
-        document.body.innerHTML = '<div class="loading">No se pudo cargar la app. Revisa conexión e intenta de nuevo.</div>';
+        document.body.innerHTML = '<div class="loading">No se pudo cargar la app. Revisa conexion e intenta de nuevo.</div>';
       }
     })();
   </script>
