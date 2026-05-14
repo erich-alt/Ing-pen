@@ -1,144 +1,59 @@
 (function(){
-  const KEY='finanzas_modulo_v1';
+  const KEY='finanzas_modulo_v2';
   const state=load();
   let sub='resumen';
 
-  function load(){
-    try{return Object.assign(base(),JSON.parse(localStorage.getItem(KEY)||'{}'));}
-    catch(e){return base();}
-  }
-  function base(){
-    return {
-      accounts:[
-        {id:1,name:'Cuenta Corriente',type:'corriente',balance:0},
-        {id:2,name:'Cuenta Ahorro',type:'ahorro',balance:0},
-        {id:3,name:'Tarjeta Crédito',type:'credito',used:0,limit:1000000}
-      ],
-      tx:[],
-      debts:[]
-    };
-  }
+  function base(){return{accounts:[{id:1,name:'Cuenta Corriente',type:'corriente',balance:0},{id:2,name:'Cuenta Ahorro',type:'ahorro',balance:0},{id:3,name:'Tarjeta Crédito',type:'credito',used:0,limit:1000000}],tx:[],debts:[],plans:[],pensions:[],vehicles:[{id:1,name:'Subaru Legacy',odometer:0},{id:2,name:'Corolla Cross',odometer:0}],fuel:[],maintenance:[]};}
+  function load(){try{return merge(base(),JSON.parse(localStorage.getItem(KEY)||'{}'));}catch(e){return base();}}
+  function merge(a,b){b=b||{};Object.keys(a).forEach(k=>{if(Array.isArray(a[k]))a[k]=Array.isArray(b[k])?b[k]:a[k];else if(typeof a[k]==='object')a[k]=Object.assign(a[k],b[k]||{});else a[k]=b[k]??a[k];});return a;}
   function save(){localStorage.setItem(KEY,JSON.stringify(state));renderFinance();}
   function money(n){return new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Math.round(Number(n||0)));}
   function num(v){let s=String(v||'').replace(/\$|\s|clp/gi,'');if(s.includes(',')&&s.includes('.'))s=s.replace(/\./g,'').replace(',','.');else if(s.includes(',')&&!s.includes('.'))s=s.replace(',','.');else if((s.match(/\./g)||[]).length>0)s=s.replace(/\./g,'');return Number(s.replace(/[^0-9.-]/g,''))||0;}
   function esc(s){return String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
   function today(){return new Date().toISOString().slice(0,10);}
   function month(){return today().slice(0,7);}
+  function uid(){return Date.now()+Math.floor(Math.random()*999);}
   function accName(id){return (state.accounts.find(a=>String(a.id)===String(id))||{}).name||'Cuenta';}
+  function vehicleName(id){return (state.vehicles.find(v=>String(v.id)===String(id))||{}).name||'Vehículo';}
   function accOptions(){return state.accounts.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');}
-  function adjustAccount(id,type,amount){
-    const a=state.accounts.find(x=>String(x.id)===String(id));
-    if(!a)return;
-    if(a.type==='credito')a.used=Math.max(0,Number(a.used||0)+(type==='gasto'?amount:-amount));
-    else a.balance=Number(a.balance||0)+(type==='ingreso'?amount:-amount);
-  }
+  function vehicleOptions(){return state.vehicles.map(v=>`<option value="${v.id}">${esc(v.name)}</option>`).join('');}
+  function adjustAccount(id,type,amount){const a=state.accounts.find(x=>String(x.id)===String(id));if(!a)return;if(a.type==='credito')a.used=Math.max(0,Number(a.used||0)+(type==='gasto'?amount:-amount));else a.balance=Number(a.balance||0)+(type==='ingreso'?amount:-amount);}
 
-  function addStyles(){
-    if(document.getElementById('finanzasStyles'))return;
-    const css=`
-      #finance .fin-chips{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px}.fin-chip{border:1px solid var(--line,#dfe7e2);background:#fff;color:var(--muted,#66736f);border-radius:999px;padding:9px 12px;font-size:12px;font-weight:800;white-space:nowrap}.fin-chip.active{background:#e6f2ee;color:#115e59;border-color:#c7e2d9}.fin-card{background:var(--surface,#fff);border:1px solid var(--line,#dfe7e2);border-radius:8px;box-shadow:var(--shadow,0 10px 28px rgba(24,34,31,.08));padding:14px;margin-bottom:12px}.fin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.fin-metric{background:#eef7f4;border:1px solid #cfe6df;border-radius:8px;padding:12px;min-height:86px}.fin-label{color:#66736f;font-size:11px;font-weight:800;text-transform:uppercase}.fin-value{margin-top:10px;color:#115e59;font-size:22px;font-weight:900;line-height:1}.fin-red{color:#be123c}.fin-amber{color:#b45309}.fin-list{display:grid;gap:8px}.fin-item{display:grid;grid-template-columns:1fr auto;gap:10px;padding:11px;border-bottom:1px solid #edf1ee}.fin-item:last-child{border-bottom:0}.fin-name{font-weight:800}.fin-meta{margin-top:3px;color:#66736f;font-size:12px}.fin-amt{font-weight:900;text-align:right}.fin-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.fin-full{grid-column:1/-1}.fin-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.fin-note{background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid #b45309;border-radius:8px;padding:11px;margin-bottom:12px;color:#7c2d12;font-size:13px;line-height:1.45}.fin-danger{color:#be123c;background:#fff1f2;border:1px solid #fecdd3}.fin-secondary{color:#115e59;background:#e6f2ee;border:1px solid #c7e2d9}
-      @media(min-width:760px){.fin-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
-    `;
-    const st=document.createElement('style');st.id='finanzasStyles';st.textContent=css;document.head.appendChild(st);
-  }
+  function addStyles(){if(document.getElementById('finanzasStyles'))return;const css=`
+#finance .fin-hero{background:linear-gradient(135deg,#eef7f4,#fff);border:1px solid #cfe6df;border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 10px 28px rgba(24,34,31,.08)}#finance .fin-hero-title{font-size:20px;font-weight:950;margin:0 0 4px;color:#10201c}#finance .fin-hero-sub{margin:0;color:#66736f;font-size:12px;line-height:1.45}#finance .fin-chips{display:flex;gap:7px;overflow-x:auto;margin:0 0 12px;padding-bottom:3px}.fin-chip{border:1px solid #dfe7e2;background:#fff;color:#66736f;border-radius:999px;padding:10px 13px;font-size:12px;font-weight:850;white-space:nowrap}.fin-chip.active{background:#0f766e;color:#fff;border-color:#0f766e}.fin-card{background:#fff;border:1px solid #dfe7e2;border-radius:18px;box-shadow:0 10px 28px rgba(24,34,31,.08);padding:14px;margin-bottom:12px}.fin-card h2{margin:0 0 12px;font-size:17px}.fin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.fin-metric{background:#eef7f4;border:1px solid #cfe6df;border-radius:16px;padding:13px;min-height:92px}.fin-label{color:#66736f;font-size:11px;font-weight:850;text-transform:uppercase}.fin-value{margin-top:10px;color:#115e59;font-size:22px;font-weight:950;line-height:1}.fin-red{color:#be123c}.fin-amber{color:#b45309}.fin-blue{color:#315efb}.fin-list{display:grid;gap:8px}.fin-item{display:grid;grid-template-columns:1fr auto;gap:10px;padding:11px;border:1px solid #edf1ee;border-radius:14px;background:#fbfcfb}.fin-name{font-weight:850}.fin-meta{margin-top:3px;color:#66736f;font-size:12px;line-height:1.35}.fin-amt{font-weight:950;text-align:right}.fin-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.fin-full{grid-column:1/-1}.fin-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.fin-note{background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid #b45309;border-radius:14px;padding:12px;margin-bottom:12px;color:#7c2d12;font-size:13px;line-height:1.45}.fin-danger{color:#be123c;background:#fff1f2;border:1px solid #fecdd3}.fin-secondary{color:#115e59;background:#e6f2ee;border:1px solid #c7e2d9}.fin-good{color:#15803d;background:#f0fdf4;border:1px solid #bbf7d0}.fin-empty{color:#66736f;font-size:12px;line-height:1.45}.fin-mini-title{font-size:12px;font-weight:900;color:#66736f;text-transform:uppercase;margin:0 0 8px}@media(min-width:760px){.fin-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+`;const st=document.createElement('style');st.id='finanzasStyles';st.textContent=css;document.head.appendChild(st);}
 
-  function init(){
-    const main=document.querySelector('main');
-    const topTabs=document.querySelector('.tabs');
-    if(!main||!topTabs){setTimeout(init,250);return;}
-    addStyles();
-    if(!document.getElementById('finance')){
-      const section=document.createElement('section');
-      section.id='finance';
-      section.className='section';
-      main.appendChild(section);
-    }
-    if(!document.querySelector('[data-tab="finance"]')){
-      const b=document.createElement('button');
-      b.className='tab';
-      b.dataset.tab='finance';
-      b.textContent='Finanzas';
-      b.addEventListener('click',activateFinance);
-      topTabs.appendChild(b);
-      const bottom=document.querySelector('.bottom-nav');
-      if(bottom){
-        const n=document.createElement('button');
-        n.className='nav-btn';
-        n.dataset.tab='finance';
-        n.textContent='Finanzas';
-        n.addEventListener('click',activateFinance);
-        bottom.appendChild(n);
-      }
-      document.querySelectorAll('.tab:not([data-tab="finance"]),.nav-btn:not([data-tab="finance"])').forEach(x=>x.addEventListener('click',hideFinance));
-    }
-    renderFinance();
-  }
+  function init(){const main=document.querySelector('main');const topTabs=document.querySelector('.tabs');if(!main||!topTabs){setTimeout(init,250);return;}addStyles();if(!document.getElementById('finance')){const section=document.createElement('section');section.id='finance';section.className='section';main.appendChild(section);}if(!document.querySelector('[data-tab="finance"]')){const b=document.createElement('button');b.className='tab';b.dataset.tab='finance';b.textContent='Finanzas';b.addEventListener('click',activateFinance);topTabs.insertBefore(b,topTabs.firstChild);const bottom=document.querySelector('.bottom-nav');if(bottom){const n=document.createElement('button');n.className='nav-btn';n.dataset.tab='finance';n.textContent='Finanzas';n.addEventListener('click',activateFinance);bottom.insertBefore(n,bottom.firstChild);}document.querySelectorAll('.tab:not([data-tab="finance"]),.nav-btn:not([data-tab="finance"])').forEach(x=>x.addEventListener('click',hideFinance));}setTimeout(()=>{activateFinance();},200);renderFinance();}
+  function hideFinance(){const f=document.getElementById('finance');if(f)f.classList.remove('active');document.querySelectorAll('[data-tab="finance"]').forEach(b=>b.classList.remove('active'));}
+  function activateFinance(){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));const f=document.getElementById('finance');if(f)f.classList.add('active');document.querySelectorAll('.tab,.nav-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('[data-tab="finance"]').forEach(b=>b.classList.add('active'));renderFinance();}
+  function totals(){const cash=state.accounts.filter(a=>a.type!=='credito').reduce((s,a)=>s+Number(a.balance||0),0);const card=state.accounts.filter(a=>a.type==='credito').reduce((s,a)=>s+Number(a.used||0),0);const out=state.tx.filter(t=>String(t.date).slice(0,7)===month()&&t.type==='gasto').reduce((s,t)=>s+Number(t.amount||0),0);const inc=state.tx.filter(t=>String(t.date).slice(0,7)===month()&&t.type==='ingreso').reduce((s,t)=>s+Number(t.amount||0),0);const debt=state.debts.reduce((s,d)=>s+Number(d.balance||0),0);const pension=state.pensions.reduce((s,p)=>s+Number(p.amount||0),0);return {cash,card,out,inc,debt,pension};}
 
-  function hideFinance(){
-    const f=document.getElementById('finance');
-    if(f)f.classList.remove('active');
-    document.querySelectorAll('[data-tab="finance"]').forEach(b=>b.classList.remove('active'));
-  }
-  function activateFinance(){
-    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-    const f=document.getElementById('finance');
-    if(f)f.classList.add('active');
-    document.querySelectorAll('.tab,.nav-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('[data-tab="finance"]').forEach(b=>b.classList.add('active'));
-    renderFinance();
-  }
-
-  function totals(){
-    const cash=state.accounts.filter(a=>a.type!=='credito').reduce((s,a)=>s+Number(a.balance||0),0);
-    const card=state.accounts.filter(a=>a.type==='credito').reduce((s,a)=>s+Number(a.used||0),0);
-    const out=state.tx.filter(t=>String(t.date).slice(0,7)===month()&&t.type==='gasto').reduce((s,t)=>s+Number(t.amount||0),0);
-    const debt=state.debts.reduce((s,d)=>s+Number(d.balance||0),0);
-    return {cash,card,out,debt};
-  }
-
-  function renderFinance(){
-    const el=document.getElementById('finance');
-    if(!el)return;
-    const chips=['resumen','movimientos','cuentas','deudas','datos'].map(x=>`<button class="fin-chip ${sub===x?'active':''}" data-fin-sub="${x}">${label(x)}</button>`).join('');
-    el.innerHTML=`<div class="fin-note"><b>Finanzas integrado</b><br>La carga de Excel/PDF sigue en la pestaña Cargar original. Este módulo agrega cuentas, movimientos y deudas sin tocar el importador que ya funcionaba.</div><div class="fin-chips">${chips}</div><div id="finBody"></div>`;
-    el.querySelectorAll('[data-fin-sub]').forEach(b=>b.onclick=()=>{sub=b.dataset.finSub;renderFinance();});
-    const body=document.getElementById('finBody');
-    if(sub==='resumen')body.innerHTML=renderResumen();
-    if(sub==='movimientos')body.innerHTML=renderMovimientos();
-    if(sub==='cuentas')body.innerHTML=renderCuentas();
-    if(sub==='deudas')body.innerHTML=renderDeudas();
-    if(sub==='datos')body.innerHTML=renderDatos();
-  }
-  function label(x){return {resumen:'Resumen',movimientos:'Movimientos',cuentas:'Cuentas',deudas:'Deudas',datos:'Datos'}[x]||x;}
-  function renderResumen(){const t=totals();return `<div class="fin-grid"><div class="fin-metric"><div class="fin-label">Saldo cuentas</div><div class="fin-value">${money(t.cash)}</div></div><div class="fin-metric"><div class="fin-label">Tarjetas</div><div class="fin-value fin-red">${money(t.card)}</div></div><div class="fin-metric"><div class="fin-label">Gasto mes</div><div class="fin-value fin-amber">${money(t.out)}</div></div><div class="fin-metric"><div class="fin-label">Deudas</div><div class="fin-value fin-red">${money(t.debt)}</div></div></div><div class="fin-card"><b>Últimos movimientos</b><div class="fin-list">${state.tx.length?state.tx.slice().reverse().slice(0,6).map(txItem).join(''):'<p class="empty">Sin movimientos.</p>'}</div></div>`;}
+  function renderFinance(){const el=document.getElementById('finance');if(!el)return;const items=['resumen','movimientos','cuentas','planificar','pension','autos','deudas','datos'];const chips=items.map(x=>`<button class="fin-chip ${sub===x?'active':''}" data-fin-sub="${x}">${label(x)}</button>`).join('');el.innerHTML=`<div class="fin-hero"><p class="fin-hero-title">Mis Finanzas Personales</p><p class="fin-hero-sub">Panel principal para controlar cuentas, gastos, deudas, pensión, autos y planificación. El detalle de sueldos, bonos, impuestos y PDFs sigue funcionando en las pestañas originales.</p></div><div class="fin-chips">${chips}</div><div id="finBody"></div>`;el.querySelectorAll('[data-fin-sub]').forEach(b=>b.onclick=()=>{sub=b.dataset.finSub;renderFinance();});const body=document.getElementById('finBody');body.innerHTML=({resumen:renderResumen,movimientos:renderMovimientos,cuentas:renderCuentas,planificar:renderPlanificar,pension:renderPension,autos:renderAutos,deudas:renderDeudas,datos:renderDatos}[sub]||renderResumen)();}
+  function label(x){return {resumen:'Resumen',movimientos:'Movimientos',cuentas:'Cuentas',planificar:'Planificar',pension:'Pensión',autos:'Autos',deudas:'Deudas',datos:'Datos'}[x]||x;}
+  function renderResumen(){const t=totals();return `<div class="fin-grid"><div class="fin-metric"><div class="fin-label">Saldo disponible</div><div class="fin-value">${money(t.cash)}</div></div><div class="fin-metric"><div class="fin-label">Tarjetas</div><div class="fin-value fin-red">${money(t.card)}</div></div><div class="fin-metric"><div class="fin-label">Gasto mes</div><div class="fin-value fin-amber">${money(t.out)}</div></div><div class="fin-metric"><div class="fin-label">Deudas</div><div class="fin-value fin-red">${money(t.debt)}</div></div></div><div class="fin-card"><h2>Vista rápida</h2><div class="fin-list"><div class="fin-item"><div><div class="fin-name">Pensión registrada</div><div class="fin-meta">Pagos manuales en módulo Pensión</div></div><div class="fin-amt fin-amber">${money(t.pension)}</div></div><div class="fin-item"><div><div class="fin-name">Planificados pendientes</div><div class="fin-meta">Gastos por pagar</div></div><div class="fin-amt">${state.plans.length}</div></div><div class="fin-item"><div><div class="fin-name">Vehículos</div><div class="fin-meta">Combustible y mantenciones</div></div><div class="fin-amt">${state.vehicles.length}</div></div></div></div><div class="fin-card"><h2>Últimos movimientos</h2><div class="fin-list">${state.tx.length?state.tx.slice().reverse().slice(0,6).map(txItem).join(''):'<p class="fin-empty">Sin movimientos.</p>'}</div></div>`;}
   function txItem(x){return `<div class="fin-item"><div><div class="fin-name">${esc(x.desc)}</div><div class="fin-meta">${esc(x.date)} · ${esc(accName(x.accountId))}</div></div><div class="fin-amt ${x.type==='ingreso'?'':'fin-red'}">${x.type==='ingreso'?'+':'-'}${money(x.amount)}</div></div>`;}
-  function renderMovimientos(){return `<div class="fin-card"><b>Nuevo movimiento</b><div class="fin-form" style="margin-top:10px"><div><label>Tipo</label><select id="finType"><option value="gasto">Gasto</option><option value="ingreso">Ingreso</option></select></div><div><label>Fecha</label><input id="finDate" type="date" value="${today()}"></div><div class="fin-full"><label>Descripción</label><input id="finDesc" placeholder="Supermercado, bencina, dividendo..."></div><div><label>Monto</label><input id="finAmount" inputmode="numeric"></div><div><label>Cuenta</label><select id="finAcc">${accOptions()}</select></div></div><button class="btn" style="margin-top:10px" id="finAddTx">Guardar movimiento</button></div><div class="fin-card"><b>Movimientos</b><div class="fin-list">${state.tx.length?state.tx.slice().reverse().map(txItem).join(''):'<p class="empty">Sin movimientos.</p>'}</div></div>`;}
-  function renderCuentas(){return `<div class="fin-card"><b>Nueva cuenta</b><div class="fin-form" style="margin-top:10px"><div class="fin-full"><label>Nombre</label><input id="finAccName" placeholder="Banco, efectivo, tarjeta"></div><div><label>Tipo</label><select id="finAccType"><option value="corriente">Corriente</option><option value="ahorro">Ahorro</option><option value="efectivo">Efectivo</option><option value="credito">Crédito</option></select></div><div><label>Saldo / usado</label><input id="finAccBal" inputmode="numeric"></div></div><button class="btn" style="margin-top:10px" id="finAddAcc">Agregar cuenta</button></div><div class="fin-card"><b>Cuentas</b><div class="fin-list">${state.accounts.map(a=>`<div class="fin-item"><div><div class="fin-name">${esc(a.name)}</div><div class="fin-meta">${esc(a.type)}</div></div><div class="fin-amt ${a.type==='credito'?'fin-red':''}">${money(a.type==='credito'?a.used:a.balance)}</div></div>`).join('')}</div></div>`;}
-  function renderDeudas(){return `<div class="fin-card"><b>Nueva deuda</b><div class="fin-form" style="margin-top:10px"><div class="fin-full"><label>Nombre</label><input id="finDebtName"></div><div><label>Saldo</label><input id="finDebtBal" inputmode="numeric"></div><div><label>Cuota</label><input id="finDebtPay" inputmode="numeric"></div></div><button class="btn" style="margin-top:10px" id="finAddDebt">Agregar deuda</button></div><div class="fin-card"><b>Deudas</b><div class="fin-list">${state.debts.length?state.debts.map(d=>`<div class="fin-item"><div><div class="fin-name">${esc(d.name)}</div><div class="fin-meta">Cuota ${money(d.payment)}</div></div><div class="fin-amt fin-red">${money(d.balance)}</div></div>`).join(''):'<p class="empty">Sin deudas.</p>'}</div></div>`;}
-  function renderDatos(){return `<div class="fin-card"><b>Datos Finanzas</b><p class="empty">Estos datos quedan en este navegador. El módulo Ingresos/Pensión conserva su propio respaldo original.</p><div class="fin-actions"><button class="btn fin-secondary" id="finExport">Exportar</button><button class="btn fin-danger" id="finReset">Limpiar</button></div></div>`;}
+  function renderMovimientos(){return `<div class="fin-card"><h2>Nuevo movimiento</h2><div class="fin-form"><div><label>Tipo</label><select id="finType"><option value="gasto">Gasto</option><option value="ingreso">Ingreso</option></select></div><div><label>Fecha</label><input id="finDate" type="date" value="${today()}"></div><div class="fin-full"><label>Descripción</label><input id="finDesc" placeholder="Supermercado, bencina, dividendo..."></div><div><label>Monto</label><input id="finAmount" inputmode="numeric"></div><div><label>Cuenta</label><select id="finAcc">${accOptions()}</select></div></div><button class="btn" style="margin-top:10px" id="finAddTx">Guardar movimiento</button></div><div class="fin-card"><h2>Movimientos</h2><div class="fin-list">${state.tx.length?state.tx.slice().reverse().map(txItem).join(''):'<p class="fin-empty">Sin movimientos.</p>'}</div></div>`;}
+  function renderCuentas(){return `<div class="fin-card"><h2>Nueva cuenta</h2><div class="fin-form"><div class="fin-full"><label>Nombre</label><input id="finAccName" placeholder="Banco, efectivo, tarjeta"></div><div><label>Tipo</label><select id="finAccType"><option value="corriente">Corriente</option><option value="ahorro">Ahorro</option><option value="efectivo">Efectivo</option><option value="credito">Crédito</option></select></div><div><label>Saldo / usado</label><input id="finAccBal" inputmode="numeric"></div></div><button class="btn" style="margin-top:10px" id="finAddAcc">Agregar cuenta</button></div><div class="fin-card"><h2>Cuentas</h2><div class="fin-list">${state.accounts.map(a=>`<div class="fin-item"><div><div class="fin-name">${esc(a.name)}</div><div class="fin-meta">${esc(a.type)}</div></div><div class="fin-amt ${a.type==='credito'?'fin-red':''}">${money(a.type==='credito'?a.used:a.balance)}</div></div>`).join('')}</div></div>`;}
+  function renderPlanificar(){return `<div class="fin-card"><h2>Gasto planificado</h2><div class="fin-form"><div><label>Fecha</label><input id="planDate" type="date" value="${today()}"></div><div><label>Monto</label><input id="planAmount" inputmode="numeric"></div><div class="fin-full"><label>Descripción</label><input id="planDesc" placeholder="Colegio, dividendo, regalo..."></div><div class="fin-full"><label>Cuenta para pagar</label><select id="planAcc">${accOptions()}</select></div></div><button class="btn" style="margin-top:10px" id="finAddPlan">Agregar planificado</button></div><div class="fin-card"><h2>Pendientes</h2><div class="fin-list">${state.plans.length?state.plans.map(p=>`<div><div class="fin-item"><div><div class="fin-name">${esc(p.desc)}</div><div class="fin-meta">${esc(p.date)} · ${esc(accName(p.accountId))}</div></div><div class="fin-amt fin-amber">${money(p.amount)}</div></div><div class="fin-actions"><button class="btn fin-good" data-pay-plan="${p.id}">Pagar</button><button class="btn fin-danger" data-del-plan="${p.id}">Eliminar</button></div></div>`).join(''):'<p class="fin-empty">Sin gastos planificados.</p>'}</div></div>`;}
+  function renderPension(){const total=state.pensions.reduce((s,p)=>s+Number(p.amount||0),0);return `<div class="fin-card"><h2>Pago de pensión</h2><div class="fin-form"><div><label>Fecha</label><input id="penDate" type="date" value="${today()}"></div><div><label>Monto</label><input id="penAmount" inputmode="numeric"></div><div class="fin-full"><label>Detalle</label><input id="penDesc" placeholder="Pensión alimentos, extraordinario, etc."></div><div class="fin-full"><label>Cuenta pago</label><select id="penAcc">${accOptions()}</select></div></div><button class="btn" style="margin-top:10px" id="finAddPension">Guardar pago pensión</button></div><div class="fin-card"><h2>Resumen pensión</h2><div class="fin-grid"><div class="fin-metric"><div class="fin-label">Total registrado</div><div class="fin-value fin-amber">${money(total)}</div></div><div class="fin-metric"><div class="fin-label">Pagos</div><div class="fin-value">${state.pensions.length}</div></div></div><div class="fin-list" style="margin-top:10px">${state.pensions.length?state.pensions.slice().reverse().map(p=>`<div class="fin-item"><div><div class="fin-name">${esc(p.desc)}</div><div class="fin-meta">${esc(p.date)} · ${esc(accName(p.accountId))}</div></div><div class="fin-amt fin-red">-${money(p.amount)}</div></div>`).join(''):'<p class="fin-empty">Sin pagos de pensión registrados en Finanzas.</p>'}</div></div><div class="fin-note">Los comprobantes PDF siguen cargándose en <b>Cargar</b>, usando el importador original. Este módulo es para control financiero personal y caja.</div>`;}
+  function renderAutos(){const fuelCost=state.fuel.reduce((s,f)=>s+Number(f.amount||0),0);const maintCost=state.maintenance.reduce((s,m)=>s+Number(m.amount||0),0);const logs=state.fuel.slice().sort((a,b)=>Number(b.km)-Number(a.km));const last=logs[0],prev=logs[1];const diff=last&&prev?Number(last.km)-Number(prev.km):0;const kmL=last&&diff>0&&Number(last.liters)>0?(diff/Number(last.liters)).toFixed(1):'-';return `<div class="fin-grid"><div class="fin-metric"><div class="fin-label">Costo combustible</div><div class="fin-value fin-amber">${money(fuelCost)}</div></div><div class="fin-metric"><div class="fin-label">Mantenciones</div><div class="fin-value fin-red">${money(maintCost)}</div></div><div class="fin-metric"><div class="fin-label">Último rendimiento</div><div class="fin-value">${kmL} km/L</div></div><div class="fin-metric"><div class="fin-label">Vehículos</div><div class="fin-value">${state.vehicles.length}</div></div></div><div class="fin-card"><h2>Carga de combustible</h2><div class="fin-form"><div><label>Vehículo</label><select id="fuelVehicle">${vehicleOptions()}</select></div><div><label>Fecha</label><input id="fuelDate" type="date" value="${today()}"></div><div><label>Kilometraje</label><input id="fuelKm" inputmode="numeric"></div><div><label>Litros</label><input id="fuelLiters" inputmode="decimal" placeholder="10,7"></div><div><label>Monto</label><input id="fuelAmount" inputmode="numeric"></div><div><label>Cuenta</label><select id="fuelAcc">${accOptions()}</select></div></div><button class="btn" style="margin-top:10px" id="finAddFuel">Guardar carga y gasto</button></div><div class="fin-card"><h2>Mantención</h2><div class="fin-form"><div><label>Vehículo</label><select id="maintVehicle">${vehicleOptions()}</select></div><div><label>Fecha</label><input id="maintDate" type="date" value="${today()}"></div><div class="fin-full"><label>Detalle</label><input id="maintDesc" placeholder="Aceite, revisión, neumáticos..."></div><div><label>Monto</label><input id="maintAmount" inputmode="numeric"></div><div><label>Cuenta</label><select id="maintAcc">${accOptions()}</select></div></div><button class="btn" style="margin-top:10px" id="finAddMaint">Guardar mantención y gasto</button></div><div class="fin-card"><h2>Historial combustible</h2><div class="fin-list">${state.fuel.length?state.fuel.slice().reverse().map(f=>`<div class="fin-item"><div><div class="fin-name">${esc(vehicleName(f.vehicleId))}</div><div class="fin-meta">${esc(f.date)} · ${f.km} km · ${String(f.liters).replace('.',',')} L</div></div><div class="fin-amt fin-red">-${money(f.amount)}</div></div>`).join(''):'<p class="fin-empty">Sin cargas registradas.</p>'}</div></div>`;}
+  function renderDeudas(){return `<div class="fin-card"><h2>Nueva deuda</h2><div class="fin-form"><div class="fin-full"><label>Nombre</label><input id="finDebtName" placeholder="Crédito, préstamo, tarjeta..."></div><div><label>Saldo</label><input id="finDebtBal" inputmode="numeric"></div><div><label>Cuota</label><input id="finDebtPay" inputmode="numeric"></div></div><button class="btn" style="margin-top:10px" id="finAddDebt">Agregar deuda</button></div><div class="fin-card"><h2>Deudas</h2><div class="fin-list">${state.debts.length?state.debts.map(d=>`<div class="fin-item"><div><div class="fin-name">${esc(d.name)}</div><div class="fin-meta">Cuota ${money(d.payment)}</div></div><div class="fin-amt fin-red">${money(d.balance)}</div></div>`).join(''):'<p class="fin-empty">Sin deudas.</p>'}</div></div>`;}
+  function renderDatos(){return `<div class="fin-card"><h2>Datos Finanzas</h2><p class="fin-empty">Estos datos quedan en este navegador. Ingresos/Pensión mantiene su respaldo original en las pestañas de esa app.</p><div class="fin-actions"><button class="btn fin-secondary" id="finExport">Exportar Finanzas</button><button class="btn fin-danger" id="finReset">Limpiar Finanzas</button></div></div>`;}
 
   document.addEventListener('click',function(e){
-    if(e.target&&e.target.id==='finAddTx'){
-      const amount=Math.abs(num(document.getElementById('finAmount').value)); if(!amount)return alert('Ingresa monto');
-      const x={id:Date.now(),type:document.getElementById('finType').value,date:document.getElementById('finDate').value,desc:document.getElementById('finDesc').value||'Movimiento',amount,accountId:document.getElementById('finAcc').value};
-      state.tx.push(x); adjustAccount(x.accountId,x.type,amount); save();
-    }
-    if(e.target&&e.target.id==='finAddAcc'){
-      const name=document.getElementById('finAccName').value.trim(); if(!name)return alert('Falta nombre');
-      const type=document.getElementById('finAccType').value; const val=Math.abs(num(document.getElementById('finAccBal').value));
-      state.accounts.push({id:Date.now(),name,type,balance:type==='credito'?0:val,used:type==='credito'?val:0}); save();
-    }
-    if(e.target&&e.target.id==='finAddDebt'){
-      const name=document.getElementById('finDebtName').value.trim(); if(!name)return alert('Falta nombre');
-      state.debts.push({id:Date.now(),name,balance:Math.abs(num(document.getElementById('finDebtBal').value)),payment:Math.abs(num(document.getElementById('finDebtPay').value))}); save();
-    }
-    if(e.target&&e.target.id==='finExport'){
-      const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='finanzas-modulo.json'; a.click(); URL.revokeObjectURL(a.href);
-    }
-    if(e.target&&e.target.id==='finReset'){
-      if(confirm('¿Limpiar datos de Finanzas?')){const fresh=base(); state.accounts=fresh.accounts; state.tx=fresh.tx; state.debts=fresh.debts; save();}
-    }
+    const id=e.target&&e.target.id;
+    if(id==='finAddTx'){const amount=Math.abs(num(document.getElementById('finAmount').value));if(!amount)return alert('Ingresa monto');const x={id:uid(),type:document.getElementById('finType').value,date:document.getElementById('finDate').value,desc:document.getElementById('finDesc').value||'Movimiento',amount,accountId:document.getElementById('finAcc').value};state.tx.push(x);adjustAccount(x.accountId,x.type,amount);save();}
+    if(id==='finAddAcc'){const name=document.getElementById('finAccName').value.trim();if(!name)return alert('Falta nombre');const type=document.getElementById('finAccType').value;const val=Math.abs(num(document.getElementById('finAccBal').value));state.accounts.push({id:uid(),name,type,balance:type==='credito'?0:val,used:type==='credito'?val:0});save();}
+    if(id==='finAddDebt'){const name=document.getElementById('finDebtName').value.trim();if(!name)return alert('Falta nombre');state.debts.push({id:uid(),name,balance:Math.abs(num(document.getElementById('finDebtBal').value)),payment:Math.abs(num(document.getElementById('finDebtPay').value))});save();}
+    if(id==='finAddPlan'){const amount=Math.abs(num(document.getElementById('planAmount').value));const desc=document.getElementById('planDesc').value.trim();if(!amount||!desc)return alert('Faltan datos');state.plans.push({id:uid(),date:document.getElementById('planDate').value,amount,desc,accountId:document.getElementById('planAcc').value});save();}
+    if(e.target&&e.target.dataset.payPlan){const p=state.plans.find(x=>String(x.id)===String(e.target.dataset.payPlan));if(p){state.tx.push({id:uid(),type:'gasto',date:today(),desc:p.desc,amount:p.amount,accountId:p.accountId});adjustAccount(p.accountId,'gasto',p.amount);state.plans=state.plans.filter(x=>String(x.id)!==String(p.id));save();}}
+    if(e.target&&e.target.dataset.delPlan){state.plans=state.plans.filter(x=>String(x.id)!==String(e.target.dataset.delPlan));save();}
+    if(id==='finAddPension'){const amount=Math.abs(num(document.getElementById('penAmount').value));if(!amount)return alert('Ingresa monto');const p={id:uid(),date:document.getElementById('penDate').value,amount,desc:document.getElementById('penDesc').value||'Pago pensión',accountId:document.getElementById('penAcc').value};state.pensions.push(p);state.tx.push({id:uid(),type:'gasto',date:p.date,desc:p.desc,amount:p.amount,accountId:p.accountId});adjustAccount(p.accountId,'gasto',p.amount);save();}
+    if(id==='finAddFuel'){const amount=Math.abs(num(document.getElementById('fuelAmount').value));const km=Math.abs(num(document.getElementById('fuelKm').value));const liters=Math.abs(num(document.getElementById('fuelLiters').value));if(!amount||!km||!liters)return alert('Faltan datos');const f={id:uid(),vehicleId:document.getElementById('fuelVehicle').value,date:document.getElementById('fuelDate').value,km,liters,amount,accountId:document.getElementById('fuelAcc').value};state.fuel.push(f);state.tx.push({id:uid(),type:'gasto',date:f.date,desc:'Combustible '+vehicleName(f.vehicleId),amount:f.amount,accountId:f.accountId});adjustAccount(f.accountId,'gasto',f.amount);save();}
+    if(id==='finAddMaint'){const amount=Math.abs(num(document.getElementById('maintAmount').value));const desc=document.getElementById('maintDesc').value.trim();if(!amount||!desc)return alert('Faltan datos');const m={id:uid(),vehicleId:document.getElementById('maintVehicle').value,date:document.getElementById('maintDate').value,desc,amount,accountId:document.getElementById('maintAcc').value};state.maintenance.push(m);state.tx.push({id:uid(),type:'gasto',date:m.date,desc:'Mantención '+vehicleName(m.vehicleId)+' - '+m.desc,amount:m.amount,accountId:m.accountId});adjustAccount(m.accountId,'gasto',m.amount);save();}
+    if(id==='finExport'){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='finanzas-personales.json';a.click();URL.revokeObjectURL(a.href);}
+    if(id==='finReset'){if(confirm('¿Limpiar datos de Finanzas?')){const fresh=base();Object.keys(state).forEach(k=>delete state[k]);Object.assign(state,fresh);save();}}
   });
 
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init); else init();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
