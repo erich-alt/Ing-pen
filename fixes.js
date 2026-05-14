@@ -1,6 +1,7 @@
 /* Parches de compatibilidad iPhone / impuestos / años. */
 (function () {
-  const PATCH_VERSION = 'tax-year-fix-2026-05-14-1';
+  const PATCH_VERSION = 'tax-f22-official-2026-05-14-2';
+
   const TAX_TABLE = [
     { from: 0, to: 13.5, rate: 0, rebate: 0 },
     { from: 13.5, to: 30, rate: 0.04, rebate: 0.54 },
@@ -12,27 +13,48 @@
     { from: 310, to: Infinity, rate: 0.4, rebate: 38.82 }
   ];
 
+  // Valores oficiales ya cargados desde tus F22. Para años cerrados, la app debe mostrar esto,
+  // no una estimación recalculada con UTM supuesta.
+  const OFFICIAL_F22_BY_RENT_YEAR = {
+    2024: {
+      base: 61200890,
+      annualTax: 5080343,
+      retained: 5078256,
+      balance: 2087,
+      totalPaid: 2125,
+      file: 'Declaración de Renta 2025.pdf'
+    },
+    2025: {
+      base: 66064422,
+      annualTax: 5898443,
+      retained: 6056557,
+      refund: 158114,
+      file: 'F22Compacto_16097178-9_2026_800723126.pdf'
+    }
+  };
+
   const $ = (id) => document.getElementById(id);
   const n = (value) => Number(value || 0) || 0;
-  const yearFromDate = (date) => {
-    const match = String(date || '').match(/(20\d{2})/);
-    return match ? Number(match[1]) : null;
-  };
-  const norm = (value) => String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toUpperCase();
   const money = (value) => new Intl.NumberFormat('es-CL', {
     style: 'currency',
     currency: 'CLP',
     maximumFractionDigits: 0
   }).format(Math.round(n(value)));
+  const norm = (value) => String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase();
 
   function appState() {
     try {
       if (typeof state !== 'undefined' && state && Array.isArray(state.entries)) return state;
     } catch (error) {}
     return null;
+  }
+
+  function yearFromDate(date) {
+    const match = String(date || '').match(/(20\d{2})/);
+    return match ? Number(match[1]) : null;
   }
 
   function entryDescription(entry) {
@@ -95,6 +117,7 @@
 
   function collectYears() {
     const years = new Set([2023, 2024, 2025, 2026, new Date().getFullYear()]);
+    Object.keys(OFFICIAL_F22_BY_RENT_YEAR).forEach((year) => years.add(Number(year)));
     const s = appState();
     if (s) {
       s.entries.forEach((entry) => {
@@ -125,7 +148,7 @@
       [...select.options]
         .sort((a, b) => Number(b.value) - Number(a.value))
         .forEach((option) => select.appendChild(option));
-      if (previous) select.value = previous;
+      if (previous && [...select.options].some((option) => option.value === previous)) select.value = previous;
     });
   }
 
@@ -151,15 +174,48 @@
     return s.entries.filter((entry) => !isPension(entry) && taxYearFor(entry) === year);
   }
 
+  function finalBalanceFromF22(f22) {
+    if (f22.refund) return -Math.abs(n(f22.refund));
+    if (f22.totalPaid) return Math.abs(n(f22.totalPaid));
+    return n(f22.balance);
+  }
+
+  function renderOfficialF22(year, f22) {
+    const finalBalance = finalBalanceFromF22(f22);
+    if ($('taxTitle')) $('taxTitle').textContent = `Renta ${year} - declaración ${year + 1}`;
+    if ($('taxBase')) $('taxBase').textContent = money(f22.base);
+    if ($('taxBonus')) $('taxBonus').textContent = 'Según F22';
+    if ($('taxCalc')) $('taxCalc').textContent = money(f22.annualTax);
+    if ($('taxPay')) $('taxPay').textContent = money(finalBalance);
+
+    const detail = $('taxDetail');
+    if (detail) {
+      detail.innerHTML = `
+        <div class="list-item"><div><div class="list-label">Dato oficial F22</div><div class="list-sub">${f22.file || 'Declaración de renta'}</div></div><div class="list-value">Renta ${year}</div></div>
+        <div class="list-item"><div><div class="list-label">Base tributable anual</div><div class="list-sub">Tomada de la declaración</div></div><div class="list-value">${money(f22.base)}</div></div>
+        <div class="list-item"><div><div class="list-label">Impuesto anual</div><div class="list-sub">Impuesto global/segunda categoría según F22</div></div><div class="list-value">${money(f22.annualTax)}</div></div>
+        <div class="list-item"><div><div class="list-label">Impuesto retenido / créditos</div><div class="list-sub">Tope real de devolución</div></div><div class="list-value">${money(f22.retained)}</div></div>
+        <div class="list-item"><div><div class="list-label">Resultado</div><div class="list-sub">Negativo = devolución, positivo = pago</div></div><div class="list-value">${money(finalBalance)}</div></div>
+      `;
+    }
+  }
+
   function updateTaxPanel() {
     const s = appState();
-    if (!s) return;
     const year = selectedTaxYear();
+
+    // Años ya declarados: mantener el F22 oficial. Esto evita que 2025 cambie por UTM supuesta
+    // o por reclasificación de bonos cargados después.
+    if (OFFICIAL_F22_BY_RENT_YEAR[year]) {
+      renderOfficialF22(year, OFFICIAL_F22_BY_RENT_YEAR[year]);
+      return;
+    }
+
+    if (!s) return;
     const entries = entriesForTaxYear(year);
     const settings = s.settings || {};
     const utmValue = n(settings.utmValue || ($('utmValue') && $('utmValue').value) || 69400);
     const extraCredits = n(settings.extraCredits || ($('extraCredits') && $('extraCredits').value));
-
     const base = entries.reduce((sum, entry) => sum + amount(entry, ['taxable', 'baseTributable', 'taxBase', 'gross', 'amount']), 0);
     const bonus = entries.filter(isBonus).reduce((sum, entry) => sum + amount(entry, ['taxable', 'baseTributable', 'gross', 'net', 'amount']), 0);
     const retained = entries.reduce((sum, entry) => sum + amount(entry, ['tax', 'retainedTax', 'impuesto', 'taxPaid']), 0);
@@ -168,7 +224,7 @@
     const maxRecoverable = retained + extraCredits;
     if (balance < -maxRecoverable) balance = -maxRecoverable;
 
-    if ($('taxTitle')) $('taxTitle').textContent = `Renta ${year} - declaración ${year + 1}`;
+    if ($('taxTitle')) $('taxTitle').textContent = `Renta ${year} - estimación`;
     if ($('taxBase')) $('taxBase').textContent = money(base);
     if ($('taxBonus')) $('taxBonus').textContent = money(bonus);
     if ($('taxCalc')) $('taxCalc').textContent = money(result.annualTax);
@@ -225,7 +281,7 @@
   }
 
   function scheduleApply() {
-    setTimeout(applyAll, 40);
+    setTimeout(applyAll, 60);
   }
 
   document.addEventListener('DOMContentLoaded', scheduleApply);
@@ -236,7 +292,7 @@
 
   const observer = new MutationObserver(() => {
     clearTimeout(window.__ingresosPatchTimer);
-    window.__ingresosPatchTimer = setTimeout(applyAll, 120);
+    window.__ingresosPatchTimer = setTimeout(applyAll, 140);
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
 
