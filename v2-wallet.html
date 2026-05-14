@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Finanzas Pro">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <title>Finanzas Pro Wallet</title>
+  <style>body{margin:0;background:#f5f7f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#13221f}.loading{padding:24px;text-align:center;font-weight:800}</style>
+</head>
+<body>
+  <div class="loading">Cargando Finanzas Pro...</div>
+  <script>
+    (async function(){
+      try{
+        const r = await fetch('./v2.html?v=stage2-base', {cache:'no-store'});
+        let html = await r.text();
+        const walletTag = '<script src="./v2-stage3.js?v=1"></scr' + 'ipt>';
+        if(!html.includes('v2-stage3.js')) html = html.replace('</body>', walletTag + '\n</body>');
+        document.open(); document.write(html); document.close();
+      }catch(e){
+        document.body.innerHTML = '<div class="loading">No se pudo cargar la app. Revisa conexión e intenta de nuevo.</div>';
+      }
+    })();
+  </script>
+</body>
+</html>
