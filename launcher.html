@@ -15,10 +15,10 @@
   <script>
     (async function () {
       try {
-        const response = await fetch('./index.html?v=base7', { cache: 'no-store' });
+        const response = await fetch('./index.html?v=base8', { cache: 'no-store' });
         let html = await response.text();
-        const fixesTag = '<script src="./fixes.js?v=7"></scr' + 'ipt>';
-        const pensionTag = '<script src="./pension-ui.js?v=1"></scr' + 'ipt>';
+        const fixesTag = '<script src="./fixes.js?v=8"></scr' + 'ipt>';
+        const pensionTag = '<script src="./pension-ui.js?v=2"></scr' + 'ipt>';
         if (!html.includes('fixes.js')) html = html.replace('</body>', '  ' + fixesTag + '\n</body>');
         if (!html.includes('pension-ui.js')) html = html.replace('</body>', '  ' + pensionTag + '\n</body>');
         document.open();
