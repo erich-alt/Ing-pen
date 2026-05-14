@@ -15,10 +15,12 @@
   <script>
     (async function(){
       try{
-        const r = await fetch('./v2.html?v=stage2-base', {cache:'no-store'});
+        const r = await fetch('./v2.html?v=stage2-base2', {cache:'no-store'});
         let html = await r.text();
         const walletTag = '<script src="./v2-stage3.js?v=1"></scr' + 'ipt>';
+        const stage4Tag = '<script src="./v2-stage4.js?v=1"></scr' + 'ipt>';
         if(!html.includes('v2-stage3.js')) html = html.replace('</body>', walletTag + '\n</body>');
+        if(!html.includes('v2-stage4.js')) html = html.replace('</body>', stage4Tag + '\n</body>');
         document.open(); document.write(html); document.close();
       }catch(e){
         document.body.innerHTML = '<div class="loading">No se pudo cargar la app. Revisa conexión e intenta de nuevo.</div>';
