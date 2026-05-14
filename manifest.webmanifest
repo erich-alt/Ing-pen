@@ -2,7 +2,7 @@
   "name": "Control Ingresos",
   "short_name": "Ingresos",
   "description": "Control local de liquidaciones, pension, AFP, Isapre e impuestos.",
-  "start_url": "./app_iphone_fix.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
