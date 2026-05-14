@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Control Ingresos">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <title>Control Ingresos</title>
+  <style>
+    html, body { margin:0; height:100%; background:#f6f7f4; overflow:hidden; }
+    #appFrame { width:100vw; height:100vh; border:0; display:block; }
+    #loading { position:fixed; inset:0; display:grid; place-items:center; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:#0f302d; background:#f6f7f4; z-index:9999; }
+  </style>
+</head>
+<body>
+  <div id="loading">Cargando Control Ingresos...</div>
+  <iframe id="appFrame" src="./index.html?v=base-app-9"></iframe>
+  <script>
+    const frame = document.getElementById('appFrame');
+    const loading = document.getElementById('loading');
+
+    const patchCode = `
+(function(){
+  const PATCH_VERSION='app-frame-fix-9';
+  const OFFICIAL_F22={
+    2024:{base:61200890,annualTax:5080343,retained:5078256,balance:2087,totalPaid:2125,file:'Declaración de Renta 2025.pdf'},
+    2025:{base:66064422,annualTax:5898443,retained:6056557,refund:158114,file:'F22Compacto_16097178-9_2026_800723126.pdf'}
+  };
+  const TAX_TABLE=[{from:0,to:13.5,rate:0,rebate:0},{from:13.5,to:30,rate:0.04,rebate:0.54},{from:30,to:50,rate:0.08,rebate:1.74},{from:50,to:70,rate:0.135,rebate:4.49},{from:70,to:90,rate:0.23,rebate:11.14},{from:90,to:120,rate:0.304,rebate:17.8},{from:120,to:310,rate:0.35,rebate:23.32},{from:310,to:Infinity,rate:0.4,rebate:38.82}];
+  function $(id){return document.getElementById(id)}
+  function n(v){return Number(v||0)||0}
+  function money(v){return new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Math.round(n(v)))}
+  function norm(v){return String(v||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toUpperCase()}
+  function appState(){try{if(typeof state!=='undefined'&&state&&Array.isArray(state.entries))return state}catch(e){} return null}
+  function yFromDate(v){const m=String(v||'').match(/(20\\d{2})/); return m?Number(m[1]):null}
+  function desc(e){return e.description||e.desc||e.name||e.glosa||''}
+  function edate(e){return e.date||e.paymentDate||e.fecha||e.period||''}
+  function isBonus(e){const t=norm(e.type), d=norm(desc(e)); return t.includes('BONUS')||t.includes('BONO')||d.includes('BONO')}
+  function isPension(e){const t=norm(e.type), d=norm(desc(e)); return t.includes('PENSION')||d.includes('PENSION')}
+  function taxYearFor(e){const ex=Number(e.taxYear||e.anoRenta||e.rentaYear||0); if(ex)return ex; const y=yFromDate(edate(e)); if(!y)return null; return isBonus(e)?y-1:y}
+  function amount(e,keys){for(const k of keys){if(e[k]!==undefined&&e[k]!==null&&e[k]!=='')return n(e[k])} return 0}
+
+  function normalizeBonusYears(){
+    const s=appState(); if(!s)return;
+    let changed=false;
+    s.entries.forEach(e=>{ if(!isBonus(e))return; const paid=yFromDate(edate(e)); if(!paid)return; const cur=Number(e.taxYear||0); if(!cur||cur>=paid){e.taxYear=paid-1; changed=true;} });
+    if(changed){try{ if(typeof saveToDb==='function')saveToDb(s); localStorage.setItem('ingresos_v4',JSON.stringify(s)); }catch(e){}}
+  }
+
+  function extendYears(){
+    const years=new Set([2023,2024,2025,2026,new Date().getFullYear()]);
+    Object.keys(OFFICIAL_F22).forEach(y=>years.add(Number(y)));
+    const s=appState(); if(s){s.entries.forEach(e=>{const py=yFromDate(edate(e)); const ty=taxYearFor(e); if(py)years.add(py); if(ty)years.add(ty);});}
+    ['taxYear','dashYear','taxYearPanel'].forEach(id=>{const sel=$(id); if(!sel)return; const prev=sel.value; const existing=new Set([...sel.options].map(o=>Number(o.value))); [...years].sort((a,b)=>b-a).forEach(y=>{if(!existing.has(y)){const o=document.createElement('option');o.value=String(y);o.textContent=String(y);sel.appendChild(o);}}); [...sel.options].sort((a,b)=>Number(b.value)-Number(a.value)).forEach(o=>sel.appendChild(o)); if(prev&&[...sel.options].some(o=>o.value===prev))sel.value=prev;});
+  }
+
+  function officialBalance(f){ if(f.refund)return -Math.abs(n(f.refund)); if(f.totalPaid)return Math.abs(n(f.totalPaid)); return n(f.balance); }
+  function renderF22(year,f){
+    if($('taxTitle')) $('taxTitle').textContent='Renta '+year+' - declaración '+(year+1)+' (F22 oficial)';
+    if($('taxBase')) $('taxBase').textContent=money(f.base);
+    if($('taxBonus')) $('taxBonus').textContent='Según F22';
+    if($('taxCalc')) $('taxCalc').textContent=money(f.annualTax);
+    if($('taxPay')) $('taxPay').textContent=money(officialBalance(f));
+    const detail=$('taxDetail');
+    if(detail) detail.innerHTML='<div class="list-item"><div><div class="list-label">Dato oficial F22</div><div class="list-sub">'+(f.file||'Declaración de renta')+'</div></div><div class="list-value">Renta '+year+'</div></div>'+
+    '<div class="list-item"><div><div class="list-label">Base tributable anual</div><div class="list-sub">Tomada de la declaración</div></div><div class="list-value">'+money(f.base)+'</div></div>'+
+    '<div class="list-item"><div><div class="list-label">Impuesto anual</div><div class="list-sub">Valor oficial F22</div></div><div class="list-value">'+money(f.annualTax)+'</div></div>'+
+    '<div class="list-item"><div><div class="list-label">Impuesto retenido / créditos</div><div class="list-sub">Tope real de devolución</div></div><div class="list-value">'+money(f.retained)+'</div></div>'+
+    '<div class="list-item"><div><div class="list-label">Resultado</div><div class="list-sub">Negativo = devolución, positivo = pago</div></div><div class="list-value">'+money(officialBalance(f))+'</div></div>';
+  }
+
+  function calcTax(base,utm){const uta=Math.max(n(utm)*12,1); const baseUta=n(base)/uta; const b=TAX_TABLE.find(r=>baseUta>r.from&&baseUta<=r.to)||TAX_TABLE[0]; return {baseUta,uta,annualTax:Math.max(0,(baseUta*b.rate-b.rebate)*uta)}}
+  function updateTax(){
+    const year=Number(($('taxYearPanel')&&$('taxYearPanel').value)||($('taxYear')&&$('taxYear').value)||new Date().getFullYear());
+    if(OFFICIAL_F22[year]){renderF22(year,OFFICIAL_F22[year]);return;}
+    const s=appState(); if(!s)return;
+    const entries=s.entries.filter(e=>!isPension(e)&&taxYearFor(e)===year);
+    const settings=s.settings||{}; const utm=n(settings.utmValue||($('utmValue')&&$('utmValue').value)||69400); const extra=n(settings.extraCredits||($('extraCredits')&&$('extraCredits').value));
+    const base=entries.reduce((sum,e)=>sum+amount(e,['taxable','baseTributable','taxBase','gross','amount']),0);
+    const bonus=entries.filter(isBonus).reduce((sum,e)=>sum+amount(e,['taxable','baseTributable','gross','net','amount']),0);
+    const retained=entries.reduce((sum,e)=>sum+amount(e,['tax','retainedTax','impuesto','taxPaid']),0);
+    const r=calcTax(base,utm); let bal=r.annualTax-retained-extra; const max=retained+extra; if(bal< -max)bal=-max;
+    if($('taxTitle')) $('taxTitle').textContent='Renta '+year+' - estimación';
+    if($('taxBase')) $('taxBase').textContent=money(base); if($('taxBonus')) $('taxBonus').textContent=money(bonus); if($('taxCalc')) $('taxCalc').textContent=money(r.annualTax); if($('taxPay')) $('taxPay').textContent=money(bal);
+  }
+
+  function fixText(){
+    const reps=[[/\\bAno\\b/g,'Año'],[/\\bano\\b/g,'año'],[/declaracion/g,'declaración'],[/Declaracion/g,'Declaración'],[/\\bpension\\b/g,'pensión'],[/\\bPension\\b/g,'Pensión'],[/Liquido/g,'Líquido'],[/Analisis/g,'Análisis'],[/Credito/g,'Crédito'],[/Creditos/g,'Créditos']];
+    const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT); const nodes=[]; while(w.nextNode())nodes.push(w.currentNode); nodes.forEach(node=>{let text=node.nodeValue; reps.forEach(([a,b])=>text=text.replace(a,b)); node.nodeValue=text;});
+  }
+
+  function group(id){const el=$(id); return el?el.closest('.form-group'):null}
+  function show(id,on){const g=group(id); if(g)g.style.display=on?'':'none'}
+  function setLabel(id,txt){const g=group(id); const l=g&&g.querySelector('label'); if(l)l.textContent=txt}
+  function today(){const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+  function selectedPension(){const t=$('entryType'); return !!t&&t.value==='pension'}
+  function prepPension(){ if(!selectedPension())return; ['entryGross','entryNet','entryAfp','entryTax','entryHealth','entryAfc','entryTaxable','entryTaxYear'].forEach(id=>{const e=$(id); if(e)e.value=''}); const de=$('entryDesc'); if(de)de.value='Pensión alimenticia'; const dt=$('entryDate'); if(dt&&!dt.value)dt.value=today(); }
+  function pensionForm(){
+    const t=$('entryType'); if(!t)return; [...t.options].forEach(o=>{if(o.value==='pension')o.textContent='Pensión alimenticia'}); const on=selectedPension(); show('entryDate',true); show('entryPensionPayment',true); setLabel('entryPensionPayment',on?'Monto pensión alimenticia pagada':'Pensión pagada'); ['entryDesc','entryGross','entryNet','entryAfp','entryTax','entryHealth','entryAfc','entryTaxable','entryTaxYear'].forEach(id=>show(id,!on)); if(on)prepPension(); const s=$('saveEntryBtn'); if(s&&!s.dataset.pensionFix){s.dataset.pensionFix='1'; s.addEventListener('click',prepPension,true);} if(!t.dataset.pensionFix){t.dataset.pensionFix='1'; t.addEventListener('change',pensionForm);} }
+
+  let busy=false;
+  function apply(){ if(busy)return; busy=true; try{normalizeBonusYears();extendYears();updateTax();pensionForm();fixText();}finally{busy=false;} }
+  document.addEventListener('change',e=>{ if(e.target&&['taxYear','dashYear','taxYearPanel','utmValue','extraCredits','entryType'].includes(e.target.id))setTimeout(apply,40);},true);
+  new MutationObserver(()=>{clearTimeout(window.__appFrameFixTimer); window.__appFrameFixTimer=setTimeout(apply,100);}).observe(document.documentElement,{childList:true,subtree:true});
+  window.appFrameFixVersion=PATCH_VERSION;
+  setInterval(apply,1200);
+  setTimeout(apply,120);
+})();
+    `;
+
+    function injectPatch() {
+      try {
+        const doc = frame.contentDocument;
+        if (!doc || !doc.body) return;
+        if (!doc.getElementById('appFrameFixScript')) {
+          const script = doc.createElement('script');
+          script.id = 'appFrameFixScript';
+          script.textContent = patchCode;
+          doc.body.appendChild(script);
+        }
+        loading.style.display = 'none';
+      } catch (error) {
+        loading.textContent = 'No se pudo aplicar la actualización. Recarga con internet.';
+      }
+    }
+
+    frame.addEventListener('load', () => {
+      setTimeout(injectPatch, 200);
+      setTimeout(injectPatch, 800);
+      setTimeout(injectPatch, 1600);
+    });
+  </script>
+</body>
+</html>
