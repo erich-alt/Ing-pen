@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Control Ingresos">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <title>Control Ingresos</title>
+  <style>
+    :root {
+      --bg: #f6f7f4;
+      --surface: #ffffff;
+      --surface-2: #eef7f4;
+      --text: #18221f;
+      --muted: #66736f;
+      --line: #dfe7e2;
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --accent: #b45309;
+      --danger: #be123c;
+      --ok: #15803d;
+      --shadow: 0 10px 28px rgba(24, 34, 31, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app { min-height: 100vh; padding-bottom: max(92px, env(safe-area-inset-bottom)); }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(246, 247, 244, 0.94);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--line);
+      padding: max(14px, env(safe-area-inset-top)) 16px 12px;
+    }
+    .title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    h1 { margin: 0; font-size: 22px; line-height: 1.1; }
+    .subtitle { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+    .year-select {
+      width: auto;
+      min-width: 104px;
+      padding: 9px 10px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      font-weight: 700;
+      color: var(--primary-dark);
+    }
+
+    main { padding: 14px 14px 0; max-width: 880px; margin: 0 auto; }
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .tab, .nav-btn, button {
+      font: inherit;
+      border: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tab {
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      background: var(--surface);
+      font-size: 12px;
+      font-weight: 750;
+    }
+    .tab.active {
+      color: white;
+      border-color: var(--primary);
+      background: var(--primary);
+    }
+
+    .section { display: none; }
+    .section.active { display: block; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .card h2 { margin: 0 0 12px; font-size: 16px; }
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .metric {
+      min-height: 86px;
+      background: var(--surface-2);
+      border: 1px solid #cfe6df;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .metric.warn { background: #fff7ed; border-color: #fed7aa; }
+    .metric.danger { background: #fff1f2; border-color: #fecdd3; }
+    .metric.ok { background: #f0fdf4; border-color: #bbf7d0; }
+    .metric.action { cursor: pointer; }
+    .metric.action:active { transform: scale(0.99); }
+    .metric-label { color: var(--muted); font-size: 11px; font-weight: 750; text-transform: uppercase; }
+    .metric-value { color: var(--primary-dark); font-size: clamp(17px, 4.6vw, 23px); line-height: 1; font-weight: 850; overflow-wrap: anywhere; }
+    .metric.warn .metric-value { color: var(--accent); }
+    .metric.danger .metric-value { color: var(--danger); }
+    .metric.ok .metric-value { color: var(--ok); }
+
+    .list { display: grid; gap: 2px; }
+    .list-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 11px 0;
+      border-bottom: 1px solid #edf1ee;
+    }
+    .list-item[data-analysis] { cursor: pointer; }
+    .list-item:last-child { border-bottom: 0; }
+    .list-label { font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+    .list-sub { margin-top: 2px; color: var(--muted); font-size: 12px; }
+    .list-value { color: var(--primary-dark); font-size: 14px; font-weight: 850; text-align: right; white-space: nowrap; }
+    .row-actions { display: flex; justify-content: flex-end; margin-top: 6px; }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; min-width: 640px; }
+    th, td { padding: 9px 8px; border-bottom: 1px solid #edf1ee; text-align: right; font-size: 12px; }
+    th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface); }
+    th { color: var(--muted); font-weight: 850; text-transform: uppercase; }
+    td { font-weight: 650; }
+    .attachment-list { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; margin-top: 6px; }
+    .attachment-link { display: inline-flex; align-items: center; min-height: 28px; padding: 5px 8px; border-radius: 8px; color: var(--primary-dark); background: #e6f2ee; font-size: 11px; font-weight: 800; text-decoration: none; }
+    .range-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+
+    label { display: block; color: var(--muted); font-size: 12px; font-weight: 750; margin-bottom: 5px; }
+    input, select, textarea {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fbfcfb;
+      color: var(--text);
+      font: inherit;
+      font-size: 14px;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: 0;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+      background: white;
+    }
+    .form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .form-group { margin-bottom: 11px; }
+    .button-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+    .btn {
+      min-height: 44px;
+      width: 100%;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-weight: 800;
+      color: white;
+      background: var(--primary);
+    }
+    .btn.secondary { color: var(--primary-dark); background: #e6f2ee; border: 1px solid #c7e2d9; }
+    .btn.danger { color: var(--danger); background: #fff1f2; border: 1px solid #fecdd3; }
+    .btn.small { min-height: 28px; width: auto; padding: 5px 8px; font-size: 11px; }
+
+    .upload-area {
+      display: grid;
+      place-items: center;
+      min-height: 118px;
+      padding: 18px;
+      border: 2px dashed #b7c9c3;
+      border-radius: 8px;
+      background: #fbfcfb;
+      text-align: center;
+    }
+    .upload-area.drag, .upload-area:active { border-color: var(--primary); background: #eef7f4; }
+    .upload-title { font-size: 15px; font-weight: 850; }
+    .upload-sub, .empty { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    input[type="file"] { display: none; }
+    .note {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+      padding: 11px;
+      margin-bottom: 12px;
+      color: #7c2d12;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .progress { height: 5px; background: #dfe7e2; border-radius: 999px; overflow: hidden; margin: 10px 0 5px; }
+    .progress-bar { height: 100%; width: 0%; background: var(--primary); transition: width 0.25s ease; }
+    .status { color: var(--muted); font-size: 12px; }
+
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 30;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 8px 8px max(8px, env(safe-area-inset-bottom));
+      background: rgba(255, 255, 255, 0.96);
+      border-top: 1px solid var(--line);
+      backdrop-filter: blur(18px);
+    }
+    .nav-btn {
+      min-height: 48px;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .nav-btn.active { color: var(--primary-dark); background: #e6f2ee; }
+
+    @media (min-width: 760px) {
+      .metric-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .dashboard-grid .card { margin-bottom: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="title-row">
+        <div>
+          <h1>Control Ingresos</h1>
+          <p class="subtitle">Sueldos, bonos, pension e impuesto anual</p>
+        </div>
+        <select id="taxYear" class="year-select" aria-label="Ano tributario"></select>
+      </div>
+    </header>
+
+    <main>
+      <div class="tabs">
+        <button class="tab active" data-tab="dashboard">Hoy</button>
+        <button class="tab" data-tab="upload">Cargar</button>
+        <button class="tab" data-tab="entries">Registros</button>
+        <button class="tab" data-tab="tax">Impuesto</button>
+      </div>
+
+      <section class="section active" id="dashboard">
+        <div class="card">
+          <h2>Ano a revisar</h2>
+          <select id="dashYear"></select>
+        </div>
+
+        <div class="card">
+          <h2>Mes seleccionado</h2>
+          <input type="month" id="dashMonth">
+          <div class="metric-grid" style="margin-top: 12px;">
+            <div class="metric action" data-analysis="gross"><div class="metric-label">Total haberes</div><div class="metric-value" id="dashGross">$0</div></div>
+            <div class="metric ok action" data-analysis="net"><div class="metric-label">Liquido</div><div class="metric-value" id="dashNet">$0</div></div>
+            <div class="metric warn action" data-analysis="pensionPayment"><div class="metric-label">Pension pagada</div><div class="metric-value" id="dashPension">$0</div></div>
+            <div class="metric danger action" data-analysis="pensionRate"><div class="metric-label">% pension</div><div class="metric-value" id="dashPct">0%</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Analisis de periodo</h2>
+          <div class="range-grid">
+            <div class="form-group">
+              <label for="analysisMetric">Item</label>
+              <select id="analysisMetric">
+                <option value="afp">AFP</option>
+                <option value="health">Isapre</option>
+                <option value="afc">AFC</option>
+                <option value="tax">Impuesto</option>
+                <option value="otherDeductions">Otros descuentos</option>
+                <option value="gross">Haberes</option>
+                <option value="net">Liquido</option>
+                <option value="pensionPayment">Pension pagada</option>
+                <option value="pensionRate">% Pension</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="analysisFrom">Desde</label>
+              <input type="month" id="analysisFrom">
+            </div>
+            <div class="form-group">
+              <label for="analysisTo">Hasta</label>
+              <input type="month" id="analysisTo">
+            </div>
+          </div>
+          <div class="form-group" id="afpInitialGroup">
+            <label for="afpInitial">Saldo inicial AFP</label>
+            <input type="number" id="afpInitial" inputmode="numeric" placeholder="0">
+          </div>
+          <div class="metric-grid">
+            <div class="metric"><div class="metric-label">Periodo</div><div class="metric-value" id="analysisPeriod">-</div></div>
+            <div class="metric ok"><div class="metric-label">Total</div><div class="metric-value" id="analysisTotal">$0</div></div>
+            <div class="metric warn"><div class="metric-label">Promedio mensual</div><div class="metric-value" id="analysisAvg">$0</div></div>
+            <div class="metric danger"><div class="metric-label">Saldo final AFP</div><div class="metric-value" id="analysisAfpBalance">$0</div></div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card">
+            <p class="eyebrow">Ingresos del mes</p>
+            <div class="list" id="monthIncome"></div>
+          </div>
+          <div class="card">
+            <p class="eyebrow">Descuentos del mes</p>
+            <div class="list" id="monthDiscounts"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="eyebrow">Ultimos registros</p>
+          <div class="list" id="lastEntries"></div>
+        </div>
+
+        <div class="card">
+          <h2 id="annualTitle">Resumen anual</h2>
+          <div class="metric-grid">
+            <div class="metric"><div class="metric-label">Haberes ano</div><div class="metric-value" id="annualGross">$0</div></div>
+            <div class="metric ok"><div class="metric-label">Liquido ano</div><div class="metric-value" id="annualNet">$0</div></div>
+            <div class="metric warn"><div class="metric-label">Pension ano</div><div class="metric-value" id="annualPension">$0</div></div>
+            <div class="metric danger"><div class="metric-label">% pension ano</div><div class="metric-value" id="annualPct">0%</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="eyebrow">Detalle del ano</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Mes</th>
+                  <th>Haberes</th>
+                  <th>Liquido</th>
+                  <th>AFP</th>
+                  <th>Pension</th>
+                  <th>% Pension</th>
+                  <th>Impuesto</th>
+                  <th>Adjuntos</th>
+                </tr>
+              </thead>
+              <tbody id="annualDetail"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="upload">
+        <div class="note">Los bonos pagados en febrero se registran con fecha de pago, pero para impuesto anual se asignan automaticamente al ano anterior.</div>
+
+        <div class="card">
+          <h2>Cargar Excel</h2>
+          <div class="upload-area" id="excelArea">
+            <div>
+              <div class="upload-title">Seleccionar planillas de ingresos</div>
+              <div class="upload-sub">Acepta Ingresos 2024, 2025 y 2026</div>
+            </div>
+          </div>
+          <input type="file" id="excelFile" accept=".xlsx,.xls" multiple>
+        </div>
+
+        <div class="card">
+          <h2>Cargar PDFs</h2>
+          <div class="form-group">
+            <label for="pdfKind">Tipo de PDF</label>
+            <select id="pdfKind">
+              <option value="auto">Detectar automaticamente</option>
+              <option value="payroll">Liquidacion de sueldo o bono</option>
+              <option value="pension">Comprobante pago pension</option>
+            </select>
+          </div>
+          <div class="upload-area" id="pdfArea">
+            <div>
+              <div class="upload-title">Seleccionar PDFs</div>
+              <div class="upload-sub">Adjunta cada PDF al mes respectivo sin duplicar la liquidacion</div>
+            </div>
+          </div>
+          <input type="file" id="pdfFile" accept=".pdf" multiple>
+          <div id="pdfProgress" style="display:none;">
+            <div class="progress"><div class="progress-bar" id="pdfBar"></div></div>
+            <div class="status" id="pdfStatus">Procesando...</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Datos</h2>
+          <div class="list">
+            <div class="list-item"><div><div class="list-label">Registros guardados</div><div class="list-sub">Se guardan en este navegador</div></div><div class="list-value" id="dataCount">0</div></div>
+          </div>
+          <div class="button-row">
+            <button class="btn" id="exportBtn">Descargar respaldo</button>
+            <button class="btn secondary" id="importBtn">Importar respaldo</button>
+          </div>
+          <button class="btn danger" id="clearBtn" style="margin-top: 8px;">Limpiar todo</button>
+          <input type="file" id="backupFile" accept=".json">
+        </div>
+      </section>
+
+      <section class="section" id="entries">
+        <div class="card">
+          <h2>Nuevo registro</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="entryType">Tipo</label>
+              <select id="entryType">
+                <option value="salary">Sueldo</option>
+                <option value="bonus">Bono</option>
+                <option value="other">Otro ingreso</option>
+                <option value="pension">Pension</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="entryDate">Fecha</label>
+              <input type="date" id="entryDate">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="entryDesc">Descripcion</label>
+            <input type="text" id="entryDesc" placeholder="Ej. Sueldo abril">
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label for="entryGross">Total haberes</label><input type="number" id="entryGross" inputmode="numeric"></div>
+            <div class="form-group"><label for="entryNet">Liquido</label><input type="number" id="entryNet" inputmode="numeric"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label for="entryAfp">AFP</label><input type="number" id="entryAfp" inputmode="numeric"></div>
+            <div class="form-group"><label for="entryTax">Impuesto retenido</label><input type="number" id="entryTax" inputmode="numeric"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label for="entryHealth">Salud</label><input type="number" id="entryHealth" inputmode="numeric"></div>
+            <div class="form-group"><label for="entryAfc">AFC</label><input type="number" id="entryAfc" inputmode="numeric"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label for="entryTaxable">Base tributable</label><input type="number" id="entryTaxable" inputmode="numeric"></div>
+            <div class="form-group"><label for="entryPensionPayment">Pension pagada</label><input type="number" id="entryPensionPayment" inputmode="numeric"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label for="entryTaxYear">Ano renta</label><input type="number" id="entryTaxYear" inputmode="numeric"></div>
+          </div>
+          <div class="button-row">
+            <button class="btn" id="saveEntryBtn">Guardar</button>
+            <button class="btn secondary" id="clearEntryBtn">Limpiar</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Registros</h2>
+          <div class="list" id="allEntries"></div>
+        </div>
+      </section>
+
+      <section class="section" id="tax">
+        <div class="note">Estimacion referencial del Impuesto Global Complementario. Usa la tabla anual en UTA y descuenta el impuesto unico retenido en tus liquidaciones.</div>
+
+        <div class="card">
+          <h2>Ano renta</h2>
+          <select id="taxYearPanel"></select>
+        </div>
+
+        <div class="card">
+          <h2>Supuestos</h2>
+          <div class="form-row">
+            <div class="form-group"><label for="utmValue">UTM diciembre estimada</label><input type="number" id="utmValue" inputmode="numeric" value="69400"></div>
+            <div class="form-group"><label for="extraCredits">Creditos adicionales</label><input type="number" id="extraCredits" inputmode="numeric" value="0"></div>
+          </div>
+          <button class="btn secondary" id="saveSettingsBtn">Guardar supuestos</button>
+        </div>
+
+        <div class="card">
+          <h2 id="taxTitle">Impuesto anual</h2>
+          <div class="metric-grid">
+            <div class="metric"><div class="metric-label">Base tributable</div><div class="metric-value" id="taxBase">$0</div></div>
+            <div class="metric warn"><div class="metric-label">Bono asignado</div><div class="metric-value" id="taxBonus">$0</div></div>
+            <div class="metric"><div class="metric-label">Impuesto anual estimado</div><div class="metric-value" id="taxCalc">$0</div></div>
+            <div class="metric danger"><div class="metric-label">Pagar / recuperar</div><div class="metric-value" id="taxPay">$0</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="eyebrow">Resumen anual</p>
+          <div class="list" id="taxDetail"></div>
+        </div>
+
+        <div class="card">
+          <p class="eyebrow">Base imponible mensual</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Mes</th>
+                  <th>Base imponible</th>
+                  <th>Impuesto pagado</th>
+                  <th>Impuesto tabla mensual</th>
+                  <th>Diferencia mes</th>
+                  <th>UTM usada</th>
+                </tr>
+              </thead>
+              <tbody id="taxMonthlyDetail"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-tab="dashboard">Hoy</button>
+    <button class="nav-btn" data-tab="upload">Cargar</button>
+    <button class="nav-btn" data-tab="entries">Registros</button>
+    <button class="nav-btn" data-tab="tax">Impuesto</button>
+  </nav>
+
+  <script src="vendor/xlsx.full.min.js"></script>
+  <script src="vendor/pdf.min.js"></script>
+  <script>
+    const KEY = 'ingresos_v4';
+    const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const TAX_TABLE = [
+      { from: 0, to: 13.5, rate: 0, rebate: 0 },
+      { from: 13.5, to: 30, rate: 0.04, rebate: 0.54 },
+      { from: 30, to: 50, rate: 0.08, rebate: 1.74 },
+      { from: 50, to: 70, rate: 0.135, rebate: 4.49 },
+      { from: 70, to: 90, rate: 0.23, rebate: 11.14 },
+      { from: 90, to: 120, rate: 0.304, rebate: 17.8 },
+      { from: 120, to: 310, rate: 0.35, rebate: 23.32 },
+      { from: 310, to: Infinity, rate: 0.4, rebate: 38.82 }
+    ];
+    const UTM_BY_YEAR = {
+      2024: [64666, 64343, 64793, 65182, 65443, 65770, 65967, 65901, 66362, 66561, 66628, 67294],
+      2025: [67429, 67294, 68034, 68306, 68648, 68785, 68923, 68647, 69265, 69265, 69542, 69542],
+      2026: [69751, 69611, 69889, 69889, 70588, 71506, null, null, null, null, null, null]
+    };
+    const F22_BY_RENT_YEAR = {
+      2024: { base: 61200890, annualTax: 5080343, retained: 5078256, balance: 2087, totalPaid: 2125, file: 'Declaración de Renta 2025.pdf' },
+      2025: { base: 66064422, annualTax: 5898443, retained: 6056557, refund: 158114, file: 'F22Compacto_16097178-9_2026_800723126.pdf' }
+    };
+
+    let state = {
+      entries: [],
+      annualOverrides: {},
+      settings: { utmValue: 69400, extraCredits: 0 }
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const toNumber = (value) => Number(value || 0) || 0;
+    const money = (n) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(Math.round(toNumber(n)));
+    const pct = (part, base) => base > 0 ? (part / base * 100).toFixed(1) + '%' : '0%';
+    const normalize = (value) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim();
+
+    async function load() {
+      try {
+        const saved = await loadFromDb() || JSON.parse(localStorage.getItem(KEY));
+        if (saved) state = { ...state, ...saved, annualOverrides: { ...(saved.annualOverrides || {}) }, settings: { ...state.settings, ...(saved.settings || {}) } };
+      } catch (e) {}
+      state.entries = dedupeEntries((state.entries || []).map(normalizeEntry));
+    }
+
+    function save() {
+      saveToDb(state);
+      try {
+        localStorage.setItem(KEY, JSON.stringify(stripLargeAttachmentData(state)));
+      } catch (e) {}
+      updateCount();
+      refreshAll();
+    }
+
+    function normalizeEntry(entry) {
+      const type = entry.type || 'salary';
+      const rawGross = toNumber(entry.gross ?? entry.amount);
+      const rawNet = toNumber(entry.net ?? entry.amount);
+      const gross = type === 'pension' ? 0 : rawGross;
+      const net = type === 'pension' ? 0 : rawNet;
+      const legacyPension = toNumber(entry.pension);
+      const afp = toNumber(entry.afp ?? (type === 'salary' || type === 'bonus' ? legacyPension : 0));
+      const pensionPayment = toNumber(entry.pensionPayment ?? (type === 'pension' ? (rawGross || rawNet || legacyPension) : 0));
+      const tax = toNumber(entry.tax);
+      const date = entry.date || new Date().toISOString().slice(0, 10);
+      const paymentYear = Number(date.slice(0, 4));
+      return {
+        id: entry.id || 'e' + Date.now() + Math.random(),
+        type,
+        desc: entry.desc || labelType(type),
+        date,
+        gross,
+        net,
+        salaryBase: toNumber(entry.salaryBase),
+        gratuity: toNumber(entry.gratuity),
+        otherIncome: toNumber(entry.otherIncome),
+        afp,
+        pensionPayment,
+        health: toNumber(entry.health),
+        afc: toNumber(entry.afc),
+        tax,
+        taxableBase: type === 'pension' ? 0 : (toNumber(entry.taxableBase) || Math.max(0, gross - afp - toNumber(entry.health) - toNumber(entry.afc))),
+        otherDeductions: toNumber(entry.otherDeductions ?? entry.deductions),
+        taxYear: Number(entry.taxYear) || (type === 'bonus' && date.slice(5, 7) === '02' ? paymentYear - 1 : paymentYear),
+        source: entry.source || 'Manual',
+        fileName: entry.fileName || '',
+        attachments: Array.isArray(entry.attachments) ? entry.attachments : []
+      };
+    }
+
+    function upsertEntry(entry) {
+      const clean = normalizeEntry(entry);
+      const key = (e) => e.date === clean.date && e.type === clean.type;
+      const idx = state.entries.findIndex(key);
+      if (idx >= 0) {
+        const existing = state.entries[idx];
+        state.entries[idx] = mergeEntry(existing, clean);
+      }
+      else state.entries.push(clean);
+    }
+
+    function mergeEntry(existing, clean) {
+      const preferExisting = existing.source && existing.source.includes('Excel') && clean.source === 'PDF';
+      const merged = preferExisting ? { ...clean, ...existing } : { ...existing, ...clean };
+      return {
+        ...merged,
+        id: existing.id,
+        source: mergeSource(existing.source, clean.source),
+        attachments: mergeAttachments(existing.attachments, clean.attachments)
+      };
+    }
+
+    function dedupeEntries(entries) {
+      const merged = [];
+      entries.forEach((entry) => {
+        const idx = merged.findIndex((item) => item.date === entry.date && item.type === entry.type);
+        if (idx < 0) {
+          merged.push(entry);
+        } else {
+          const existing = merged[idx];
+          merged[idx] = mergeEntry(existing, entry);
+        }
+      });
+      return merged;
+    }
+
+    function switchTab(name) {
+      document.querySelectorAll('.section').forEach((el) => el.classList.toggle('active', el.id === name));
+      document.querySelectorAll('[data-tab]').forEach((el) => el.classList.toggle('active', el.dataset.tab === name));
+      if (name === 'entries') renderEntries();
+      if (name === 'tax') taxSummary();
+      if (name === 'dashboard') refreshDashboard();
+    }
+
+    function entriesForMonth() {
+      const month = $('dashMonth').value;
+      return state.entries.filter((entry) => entry.date.slice(0, 7) === month);
+    }
+
+    function entriesForYear(year) {
+      return state.entries.filter((entry) => Number(entry.date.slice(0, 4)) === Number(year));
+    }
+
+    function refreshDashboard() {
+      const entries = entriesForMonth();
+      const gross = sum(entries, 'gross');
+      const net = sum(entries, 'net');
+      const pension = sum(entries, 'pensionPayment');
+      const afp = sum(entries, 'afp');
+      const tax = sum(entries, 'tax');
+      const health = sum(entries, 'health');
+      const afc = sum(entries, 'afc');
+      const otherDeductions = sum(entries, 'otherDeductions');
+      refreshAnalysis();
+
+      $('dashGross').textContent = money(gross);
+      $('dashNet').textContent = money(net);
+      $('dashPension').textContent = money(pension);
+      $('dashPct').textContent = pct(pension, gross);
+
+      $('monthIncome').innerHTML = [
+        analysisRow('Sueldos', money(sum(entries.filter((e) => e.type === 'salary'), 'gross')), 'Total haberes del mes', 'gross'),
+        analysisRow('Bonos', money(sum(entries.filter((e) => e.type === 'bonus'), 'gross')), 'Fecha de pago, con ano renta ajustado', 'gross'),
+        analysisRow('Otros ingresos', money(sum(entries.filter((e) => e.type === 'other'), 'gross')), '', 'gross')
+      ].join('');
+
+      $('monthDiscounts').innerHTML = [
+        analysisRow('Pension pagada', money(pension), pct(pension, gross) + ' de total haberes', 'pensionPayment'),
+        analysisRow('AFP', money(afp), 'Descuento previsional de la liquidacion', 'afp'),
+        analysisRow('Salud', money(health), '', 'health'),
+        analysisRow('AFC', money(afc), '', 'afc'),
+        analysisRow('Impuesto retenido', money(tax), '', 'tax'),
+        analysisRow('Otros descuentos', money(otherDeductions), '', 'otherDeductions')
+      ].join('');
+
+      const recent = [...state.entries].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
+      $('lastEntries').innerHTML = recent.length ? recent.map(entryRow).join('') : empty('Sin registros todavia');
+      refreshAnnualDashboard();
+    }
+
+    function refreshAnnualDashboard() {
+      const year = selectedYear();
+      const entries = entriesForYear(year);
+      const gross = sum(entries, 'gross');
+      const net = sum(entries, 'net');
+      const pension = sum(entries, 'pensionPayment');
+      $('annualTitle').textContent = `Resumen ${year}`;
+      $('annualGross').textContent = money(gross);
+      $('annualNet').textContent = money(net);
+      $('annualPension').textContent = money(pension);
+      $('annualPct').textContent = pct(pension, gross);
+      $('annualDetail').innerHTML = annualRows(year).map((m) => `
+        <tr>
+          <td>${escapeHtml(m.month)}</td>
+          <td>${money(m.gross)}</td>
+          <td>${money(m.net)}</td>
+          <td>${money(m.afp)}</td>
+          <td>${money(m.pensionPayment)}</td>
+          <td>${pct(m.pensionPayment, m.gross)}</td>
+          <td>${money(m.tax)}</td>
+          <td>${m.attachments}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderEntries() {
+      const entries = [...state.entries].sort((a, b) => b.date.localeCompare(a.date));
+      $('allEntries').innerHTML = entries.length ? entries.map(entryRowWithDelete).join('') : empty('Sin registros todavia');
+    }
+
+    function entryRow(e) {
+      const sub = `${formatDate(e.date)} - ${labelType(e.type)} - ano renta ${e.taxYear}${e.source ? ' - ' + e.source : ''}`;
+      return row(e.desc, money(e.gross || e.net), sub);
+    }
+
+    function entryRowWithDelete(e) {
+      return `<div class="list-item">
+        <div>
+          <div class="list-label">${escapeHtml(e.desc)}</div>
+          <div class="list-sub">${formatDate(e.date)} - ${labelType(e.type)} - ano renta ${e.taxYear}</div>
+          <div class="list-sub">AFP ${money(e.afp)} - Pension ${money(e.pensionPayment)} - Impuesto ${money(e.tax)} - Liquido ${money(e.net)}</div>
+          ${attachmentLinks(e.attachments)}
+        </div>
+        <div>
+          <div class="list-value">${money(e.gross || e.net)}</div>
+          <div class="row-actions"><button class="btn danger small" onclick="deleteEntry('${e.id}')">Borrar</button></div>
+        </div>
+      </div>`;
+    }
+
+    function row(label, value, sub) {
+      return `<div class="list-item"><div><div class="list-label">${escapeHtml(label)}</div>${sub ? `<div class="list-sub">${escapeHtml(sub)}</div>` : ''}</div><div class="list-value">${value}</div></div>`;
+    }
+
+    function analysisRow(label, value, sub, metric) {
+      return `<div class="list-item" data-analysis="${escapeHtml(metric)}"><div><div class="list-label">${escapeHtml(label)}</div>${sub ? `<div class="list-sub">${escapeHtml(sub)}</div>` : ''}</div><div class="list-value">${value}</div></div>`;
+    }
+
+    function empty(text) {
+      return `<div class="empty">${escapeHtml(text)}</div>`;
+    }
+
+    function saveManualEntry() {
+      const date = $('entryDate').value;
+      if (!date) { alert('Falta la fecha'); return; }
+      const type = $('entryType').value;
+      const gross = toNumber($('entryGross').value);
+      const net = toNumber($('entryNet').value);
+      if (!gross && !net) { alert('Ingresa total haberes o liquido'); return; }
+      upsertEntry({
+        id: 'm' + Date.now(),
+        type,
+        desc: $('entryDesc').value.trim() || labelType(type),
+        date,
+        gross: gross || net,
+        net: net || gross,
+        afp: toNumber($('entryAfp').value),
+        pensionPayment: toNumber($('entryPensionPayment').value) || (type === 'pension' ? (gross || net) : 0),
+        health: toNumber($('entryHealth').value),
+        afc: toNumber($('entryAfc').value),
+        tax: toNumber($('entryTax').value),
+        taxableBase: toNumber($('entryTaxable').value),
+        taxYear: toNumber($('entryTaxYear').value) || Number(date.slice(0, 4)),
+        source: 'Manual'
+      });
+      clearManualForm();
+      save();
+      switchTab('entries');
+    }
+
+    function clearManualForm() {
+      ['entryDesc', 'entryGross', 'entryNet', 'entryAfp', 'entryPensionPayment', 'entryHealth', 'entryAfc', 'entryTax', 'entryTaxable', 'entryTaxYear'].forEach((id) => $(id).value = '');
+      $('entryType').value = 'salary';
+      $('entryDate').value = new Date().toISOString().slice(0, 10);
+    }
+
+    function deleteEntry(id) {
+      if (!confirm('Borrar este registro?')) return;
+      state.entries = state.entries.filter((entry) => entry.id !== id);
+      save();
+      renderEntries();
+    }
+
+    async function processPDFs(files) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
+      $('pdfProgress').style.display = 'block';
+      let ok = 0;
+
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index];
+        $('pdfStatus').textContent = file.name;
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const attachment = await makeAttachment(file, arrayBuffer);
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer.slice(0) }).promise;
+          let text = '';
+          for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+            const page = await pdf.getPage(pageNumber);
+            const content = await page.getTextContent();
+            text += content.items.map((item) => item.str).join(' ') + '\n';
+          }
+          const requestedKind = $('pdfKind').value;
+          const entry = requestedKind === 'pension' ? parsePensionPDF(text, file.name, attachment) : parsePDF(text, file.name, attachment, requestedKind);
+          if (entry) {
+            upsertEntry(entry);
+            ok++;
+          }
+        } catch (error) {
+          console.error(error);
+        }
+        $('pdfBar').style.width = ((index + 1) / files.length * 100) + '%';
+      }
+
+      $('pdfProgress').style.display = 'none';
+      save();
+      alert(`${ok} PDF procesados`);
+    }
+
+    function parsePDF(text, fileName, attachment, requestedKind = 'auto') {
+      const dateInfo = detectDate(text, fileName);
+      if (!dateInfo) return null;
+      const clean = normalize(text).replace(/\s+/g, ' ');
+      if (requestedKind === 'auto' && !/LIQUIDACION|REMUNERACIONES|BONO GESTION|SUELDO BASE|TOTAL(?:ES)?/.test(clean) && /PENSION|ALIMENTOS|TRANSFERENCIA|COMPROBANTE|PAGO/.test(clean)) {
+        return parsePensionPDF(text, fileName, attachment);
+      }
+      const isBonus = /BONO GESTION|GRATIFICACION\s+[A-Z]+\s+DEL/.test(clean) && /BONO GESTION/.test(clean);
+      const gross = extractTotalGross(text) || extractField(text, isBonus ? 'BONO GESTION' : 'SUELDO BASE') || extractField(text, 'TOTAL HABERES');
+      const net = extractAfter(text, /MONTO\s+L[IÍ]QUIDO/i) || gross;
+      const salaryBase = extractField(text, 'SUELDO BASE');
+      const gratuity = isBonus ? 0 : extractField(text, 'GRATIFICACION');
+      const bonus = extractField(text, 'BONO GESTION');
+      const afp = extractField(text, 'AFP');
+      const health = extractField(text, 'VIDA TRES') + extractField(text, 'DIFERENCIA SALUD');
+      const afc = extractField(text, 'AFC');
+      const taxPair = extractTax(text);
+      const totalDeductions = extractTotalDeductions(text);
+      const taxYear = isBonus && dateInfo.month === 2 ? dateInfo.year - 1 : dateInfo.year;
+
+      return {
+        id: 'pdf' + Date.now() + Math.random(),
+        type: isBonus ? 'bonus' : 'salary',
+        desc: isBonus ? `Bono pagado ${MONTHS[dateInfo.month - 1]} ${dateInfo.year}` : `Sueldo ${MONTHS[dateInfo.month - 1]} ${dateInfo.year}`,
+        date: `${dateInfo.year}-${String(dateInfo.month).padStart(2, '0')}-01`,
+        gross: gross || bonus,
+        net,
+        salaryBase,
+        gratuity,
+        otherIncome: Math.max(0, gross - salaryBase - gratuity - bonus),
+        afp,
+        pensionPayment: 0,
+        health,
+        afc,
+        tax: taxPair.tax,
+        taxableBase: taxPair.base || Math.max(0, gross - afp - health - afc),
+        otherDeductions: Math.max(0, totalDeductions - afp - health - afc - taxPair.tax),
+        taxYear,
+        source: 'PDF',
+        fileName,
+        attachments: attachment ? [{ ...attachment, kind: isBonus ? 'Bono' : 'Liquidacion' }] : []
+      };
+    }
+
+    function parsePensionPDF(text, fileName, attachment) {
+      const dateInfo = detectDate(text, fileName);
+      if (!dateInfo) return null;
+      const amount = extractPensionAmount(text);
+      return {
+        id: 'pension' + Date.now() + Math.random(),
+        type: 'pension',
+        desc: `Pago pension ${MONTHS[dateInfo.month - 1]} ${dateInfo.year}`,
+        date: `${dateInfo.year}-${String(dateInfo.month).padStart(2, '0')}-01`,
+        gross: amount,
+        net: amount,
+        pensionPayment: amount,
+        taxYear: dateInfo.year,
+        source: 'PDF',
+        fileName,
+        attachments: attachment ? [{ ...attachment, kind: 'Comprobante pension' }] : []
+      };
+    }
+
+    function processExcel(file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const workbook = XLSX.read(new Uint8Array(event.target.result), { type: 'array', cellFormula: true, cellNF: true, cellDates: false });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null, raw: true });
+          const year = Number((file.name.match(/20\d{2}/) || [new Date().getFullYear()])[0]);
+          const headers = (rows[0] || []).map((h) => normalize(h));
+          let added = 0;
+
+          rows.slice(1).forEach((row) => {
+            const monthName = row[0];
+            const isNextYearBonus = normalize(monthName).includes('BONO') && normalize(monthName).includes('SIGUIENTE');
+            const monthIndex = isNextYearBonus ? 1 : MONTHS.findIndex((m) => normalize(m) === normalize(monthName));
+            if (monthIndex < 0) return;
+            const month = monthIndex + 1;
+            const entry = {
+              id: `xlsx${year}${String(month).padStart(2, '0')}`,
+              type: isNextYearBonus ? 'bonus' : 'salary',
+              desc: isNextYearBonus ? `Bono asignado renta ${year}` : `Sueldo ${MONTHS[monthIndex]} ${year}`,
+              date: isNextYearBonus ? `${year + 1}-02-01` : `${year}-${String(month).padStart(2, '0')}-01`,
+              salaryBase: valueByHeader(row, headers, ['SUELDO BASE']),
+              gratuity: valueByHeader(row, headers, ['GRATIFICACION']),
+              otherIncome: valueByHeader(row, headers, ['OTROS ING']),
+              gross: valueByHeader(row, headers, ['TOTAL HABERES']),
+              afp: valueByHeader(row, headers, ['AFP']),
+              pensionPayment: 0,
+              health: valueByHeader(row, headers, ['ISAPRE']),
+              afc: valueByHeader(row, headers, ['AFC']),
+              tax: valueByHeader(row, headers, ['IMPUESTO']),
+              otherDeductions: valueByExactHeader(row, headers, ['SINDICATO', 'CAFR', 'OTROS']),
+              taxableBase: valueByHeader(row, headers, ['AFECTO A IMPUESTO']),
+              excelTaxableLiquidation: valueByHeader(row, headers, ['AFECTO IMPUESTO LIQUIDACION']),
+              excelFinalIncome: valueByHeader(row, headers, ['INGRESO FINAL']),
+              taxYear: year,
+              source: 'Excel',
+              fileName: `${file.name}:${year}-${month}`
+            };
+            if (!entry.taxableBase) entry.taxableBase = Math.max(0, entry.gross - entry.afp - entry.health - entry.afc);
+            entry.net = Math.max(0, entry.gross - entry.afp - entry.health - entry.afc - entry.tax - entry.otherDeductions);
+            if (entry.gross || entry.net) {
+              upsertEntry(entry);
+              added++;
+            }
+          });
+          applyExcelSummary(rows, headers, year, file.name);
+          save();
+          alert(`${added} registros desde ${file.name}`);
+        } catch (error) {
+          console.error(error);
+          alert('No pude procesar ese Excel');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function applyExcelSummary(rows, headers, year, fileName) {
+      const override = state.annualOverrides[String(year)] || {};
+      rows.forEach((row) => {
+        for (let i = 0; i < row.length - 1; i++) {
+          const label = normalize(row[i]);
+          const value = toNumber(row[i + 1]);
+          if (!label || !value) continue;
+          if (label === 'RENTA') override.base = value;
+          if (label === 'TOTAL INGRESOS SII' && !override.base) override.base = value;
+          if (label === 'IMPUESTO PAGADO') override.retained = value;
+          if (label === 'CREDITO IMPUESTO' && !override.retained) override.retained = value;
+          if (label === 'REAL') override.annualTax = value;
+          if (label === 'IMPUESTO A PAGAR' && !override.annualTax) override.annualTax = value;
+          if (label === 'DEVOLUCION') override.refund = value;
+          if (label === 'DIFERENCIA') override.balance = value;
+        }
+      });
+      override.source = fileName;
+      if (override.base || override.retained || override.annualTax || override.refund) {
+        state.annualOverrides[String(year)] = override;
+      }
+    }
+
+    function taxSummary() {
+      const year = selectedYear();
+      const entries = state.entries.filter((entry) => Number(entry.taxYear) === year);
+      const override = state.annualOverrides[String(year)] || {};
+      const calculatedBase = entries.reduce((s, entry) => s + taxable(entry), 0);
+      const base = toNumber(override.base) || calculatedBase;
+      const bonus = entries.filter((entry) => entry.type === 'bonus').reduce((s, entry) => s + (entry.taxableBase || entry.gross), 0);
+      const calculatedRetained = sum(entries, 'tax');
+      const retained = toNumber(override.retained) || calculatedRetained;
+      const credits = toNumber(state.settings.extraCredits);
+      const utm = getUtm(year, 12) || toNumber(state.settings.utmValue);
+      const uta = utm * 12;
+      const tax = toNumber(override.annualTax) || calculateGlobalTax(base, uta);
+      const rawBalance = toNumber(override.balance) || (tax - retained - credits);
+      const balance = Math.max(0, rawBalance);
+      const refund = Math.max(0, toNumber(override.refund) || -rawBalance);
+
+      $('taxTitle').textContent = `Renta ${year} - declaracion ${year + 1}`;
+      $('taxBase').textContent = money(base);
+      $('taxBonus').textContent = money(bonus);
+      $('taxCalc').textContent = money(tax);
+      $('taxPay').textContent = balance > 0 ? money(balance) : money(-refund);
+      $('taxDetail').innerHTML = [
+        row('Base en UTA', uta ? (base / uta).toFixed(2) + ' UTA' : '0 UTA', `UTA estimada: ${money(uta)}`),
+        row('Impuesto retenido', money(retained), 'Credito por impuesto unico de segunda categoria'),
+        row('Creditos adicionales', money(credits), 'Editable en supuestos'),
+        override.source ? row('Fuente anual', override.source, 'Valores anuales tomados del resumen del Excel') : '',
+        row(balance > 0 ? 'Saldo estimado a pagar' : 'Devolucion estimada', money(balance || refund), balance > 0 ? 'Antes de otros creditos o reliquidaciones' : 'Si no hay otros ajustes'),
+        f22Row(year, base, tax, retained, calculatedBase, calculatedRetained)
+      ].join('');
+      $('taxMonthlyDetail').innerHTML = taxMonthlyRows(year).map((m) => `
+        <tr>
+          <td>${escapeHtml(m.month)}</td>
+          <td>${money(m.base)}</td>
+          <td>${money(m.retained)}</td>
+          <td>${money(m.monthlyTax)}</td>
+          <td>${money(m.diff)}</td>
+          <td>${m.utm ? money(m.utm) : 'Sin UTM'}</td>
+        </tr>
+      `).join('');
+    }
+
+    function calculateGlobalTax(base, uta) {
+      if (!base || !uta) return 0;
+      const baseUta = base / uta;
+      const bracket = TAX_TABLE.find((item) => baseUta > item.from && baseUta <= item.to) || TAX_TABLE[0];
+      return Math.max(0, base * bracket.rate - uta * bracket.rebate);
+    }
+
+    function calculateMonthlyTax(base, utm) {
+      if (!base || !utm) return 0;
+      const baseUtm = base / utm;
+      const bracket = TAX_TABLE.find((item) => baseUtm > item.from && baseUtm <= item.to) || TAX_TABLE[0];
+      return Math.max(0, base * bracket.rate - utm * bracket.rebate);
+    }
+
+    function getUtm(year, month) {
+      const values = UTM_BY_YEAR[Number(year)] || [];
+      return values[Number(month) - 1] || null;
+    }
+
+    function selectedYear() {
+      return Number($('taxYearPanel')?.value || $('dashYear')?.value || $('taxYear').value);
+    }
+
+    function setSelectedYear(year) {
+      ['taxYear', 'dashYear', 'taxYearPanel'].forEach((id) => {
+        const el = $(id);
+        if (el) el.value = String(year);
+      });
+      const currentMonth = $('dashMonth').value || `${year}-01`;
+      const month = currentMonth.slice(5, 7) || '01';
+      $('dashMonth').value = `${year}-${month}`;
+      if ($('analysisFrom') && !$('analysisFrom').value) $('analysisFrom').value = `${year}-01`;
+      if ($('analysisTo') && !$('analysisTo').value) $('analysisTo').value = `${year}-12`;
+    }
+
+    function taxable(entry) {
+      return toNumber(entry.taxableBase) || Math.max(0, toNumber(entry.gross) - toNumber(entry.afp) - toNumber(entry.health) - toNumber(entry.afc));
+    }
+
+    function annualRows(year) {
+      return MONTHS.map((month, index) => {
+        const monthKey = `${year}-${String(index + 1).padStart(2, '0')}`;
+        const entries = state.entries.filter((entry) => entry.date.slice(0, 7) === monthKey);
+        return {
+          month,
+          gross: sum(entries, 'gross'),
+          net: sum(entries, 'net'),
+          afp: sum(entries, 'afp'),
+          pensionPayment: sum(entries, 'pensionPayment'),
+          tax: sum(entries, 'tax'),
+          attachments: attachmentLinks(entries.flatMap((entry) => entry.attachments || []))
+        };
+      });
+    }
+
+    function taxMonthlyRows(year) {
+      return MONTHS.map((month, index) => {
+        const entries = state.entries.filter((entry) => Number(entry.taxYear) === Number(year) && Number(entry.date.slice(5, 7)) === index + 1);
+        const base = entries.reduce((s, entry) => s + taxable(entry), 0);
+        const retained = sum(entries, 'tax');
+        const utm = getUtm(year, index + 1);
+        const monthlyTax = calculateMonthlyTax(base, utm);
+        return {
+          month,
+          base,
+          retained,
+          monthlyTax,
+          diff: monthlyTax - retained,
+          utm
+        };
+      });
+    }
+
+    function f22Row(year, base, tax, retained, calculatedBase, calculatedRetained) {
+      const f22 = F22_BY_RENT_YEAR[Number(year)];
+      if (!f22) return '';
+      const deltaBase = base - f22.base;
+      const deltaTax = tax - f22.annualTax;
+      const deltaRetained = retained - f22.retained;
+      const resultText = f22.refund ? `devolucion ${money(f22.refund)}` : `pago ${money(f22.balance || 0)}${f22.totalPaid ? ', total con reajuste ' + money(f22.totalPaid) : ''}`;
+      const sub = `F22: base ${money(f22.base)}, impuesto ${money(f22.annualTax)}, credito ${money(f22.retained)}, ${resultText}`;
+      const detail = calculatedBase && calculatedBase !== base ? `${sub}. Suma mensual calculada: base ${money(calculatedBase)}, retenido ${money(calculatedRetained)}` : sub;
+      return row('Comparacion F22', `Base ${money(deltaBase)} - Impuesto ${money(deltaTax)} - Retenido ${money(deltaRetained)}`, detail);
+    }
+
+    function refreshAnalysis() {
+      const metric = $('analysisMetric')?.value || 'afp';
+      const from = $('analysisFrom')?.value || `${selectedYear()}-01`;
+      const to = $('analysisTo')?.value || `${selectedYear()}-12`;
+      const entries = state.entries.filter((entry) => {
+        const key = entry.date.slice(0, 7);
+        return key >= from && key <= to;
+      });
+      const months = monthsBetween(from, to);
+      const value = metric === 'pensionRate' ? sum(entries, 'pensionPayment') : sum(entries, metric);
+      const base = sum(entries, 'gross');
+      const total = metric === 'pensionRate' ? (base ? value / base : 0) : value;
+      const afpInitial = toNumber($('afpInitial')?.value);
+      if ($('analysisPeriod')) $('analysisPeriod').textContent = `${from} a ${to}`;
+      if ($('analysisTotal')) $('analysisTotal').textContent = metric === 'pensionRate' ? pct(value, base) : money(total);
+      if ($('analysisAvg')) $('analysisAvg').textContent = metric === 'pensionRate' ? pct(value, base) : money(months ? total / months : total);
+      if ($('analysisAfpBalance')) $('analysisAfpBalance').textContent = money(afpInitial + sum(entries, 'afp'));
+      if ($('afpInitialGroup')) $('afpInitialGroup').style.display = metric === 'afp' ? 'block' : 'none';
+    }
+
+    function setAnalysisMetric(metric) {
+      const map = { gross: 'gross', net: 'net', pensionPayment: 'pensionPayment', pensionRate: 'pensionRate', tax: 'tax', health: 'health', afp: 'afp' };
+      $('analysisMetric').value = map[metric] || metric;
+      refreshAnalysis();
+      $('analysisMetric').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function monthsBetween(from, to) {
+      if (!from || !to) return 0;
+      const [fy, fm] = from.split('-').map(Number);
+      const [ty, tm] = to.split('-').map(Number);
+      return Math.max(1, (ty - fy) * 12 + tm - fm + 1);
+    }
+
+    function openDb() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) { resolve(null); return; }
+        const request = indexedDB.open('control_ingresos_local', 1);
+        request.onupgradeneeded = () => request.result.createObjectStore('state');
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function loadFromDb() {
+      const db = await openDb();
+      if (!db) return null;
+      return new Promise((resolve) => {
+        const request = db.transaction('state', 'readonly').objectStore('state').get(KEY);
+        request.onsuccess = () => resolve(request.result || null);
+        request.onerror = () => resolve(null);
+      });
+    }
+
+    async function saveToDb(value) {
+      try {
+        const db = await openDb();
+        if (!db) return;
+        db.transaction('state', 'readwrite').objectStore('state').put(value, KEY);
+      } catch (e) {}
+    }
+
+    function stripLargeAttachmentData(value) {
+      return {
+        ...value,
+        entries: (value.entries || []).map((entry) => ({
+          ...entry,
+          attachments: (entry.attachments || []).map((attachment) => ({
+            ...attachment,
+            dataUrl: attachment.dataUrl ? '[guardado en IndexedDB]' : ''
+          }))
+        }))
+      };
+    }
+
+    function mergeSource(a, b) {
+      return [...new Set(String(a || '').split(' + ').concat(String(b || '').split(' + ')).filter(Boolean))].join(' + ');
+    }
+
+    function mergeAttachments(a = [], b = []) {
+      const seen = new Set();
+      return [...a, ...b].filter((attachment) => {
+        const key = `${attachment.name}:${attachment.kind}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function attachmentLinks(attachments = []) {
+      if (!attachments.length) return '';
+      return `<div class="attachment-list">${attachments.map((attachment) => {
+        const label = escapeHtml(attachment.kind || 'PDF');
+        if (!attachment.dataUrl || !String(attachment.dataUrl).startsWith('data:')) return `<span class="attachment-link">${label}</span>`;
+        return `<a class="attachment-link" href="${attachment.dataUrl}" download="${escapeHtml(attachment.name)}">${label}</a>`;
+      }).join('')}</div>`;
+    }
+
+    async function makeAttachment(file, arrayBuffer) {
+      return {
+        name: file.name,
+        kind: 'PDF',
+        type: file.type || 'application/pdf',
+        dataUrl: `data:${file.type || 'application/pdf'};base64,${arrayBufferToBase64(arrayBuffer)}`
+      };
+    }
+
+    function arrayBufferToBase64(buffer) {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+      }
+      return btoa(binary);
+    }
+
+    function saveSettings() {
+      state.settings.utmValue = toNumber($('utmValue').value);
+      state.settings.extraCredits = toNumber($('extraCredits').value);
+      save();
+      taxSummary();
+    }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ingresos_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importData() {
+      const file = $('backupFile').files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          state = JSON.parse(reader.result);
+          state.entries = dedupeEntries((state.entries || []).map(normalizeEntry));
+          save();
+          alert('Respaldo importado');
+        } catch (error) {
+          alert('El respaldo no es valido');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function detectDate(text, fileName) {
+      const n = normalize(text + ' ' + fileName);
+      const monthFromText = MONTHS.findIndex((month) => n.includes(normalize(month)));
+      const yearFromText = n.match(/\b(20\d{2})\b/);
+      if (monthFromText >= 0 && yearFromText) return { year: Number(yearFromText[1]), month: monthFromText + 1 };
+      let m = fileName.match(/(20\d{2})[-_ ]?(\d{2})/);
+      if (m) return { year: Number(m[1]), month: Number(m[2]) };
+      m = fileName.match(/(\d{2})[-_ ]?(20\d{2})/);
+      if (m) return { year: Number(m[2]), month: Number(m[1]) };
+      return null;
+    }
+
+    function moneyTokens(text) {
+      return [...String(text || '').matchAll(/(^|[^\d])(\d{1,3}(?:[.,]\d{3})+)/g)].map((match) => parseMoney(match[2]));
+    }
+
+    function parseMoney(value) {
+      const clean = String(value || '').replace(/[^\d.,]/g, '');
+      if (!clean) return 0;
+      const normalized = clean.replace(/[.,]/g, '');
+      return Number(normalized) || 0;
+    }
+
+    function extractField(text, label) {
+      const source = normalize(text).replace(/\s+/g, ' ');
+      const normalizedLabel = normalize(label).replace(/\s+/g, '\\s+');
+      const match = source.match(new RegExp(normalizedLabel + '[\\s\\S]{0,90}?(?=(?:SUELDO BASE|GRATIFICACION|ASIG|COLACION|SEGURO|AFP|VIDA TRES|DIFERENCIA SALUD|AFC|IMPUESTO|PRESTAMO|EXT\\.|TOTALES|MONTO LIQUIDO)|$)', 'i'));
+      const tokens = moneyTokens(match ? match[0] : '');
+      return tokens.length ? tokens[tokens.length - 1] : 0;
+    }
+
+    function extractAfter(text, regex) {
+      const match = String(text || '').match(new RegExp(regex.source + '[^0-9]{0,30}(\\d{1,3}(?:[.,]\\d{3})+)', 'i'));
+      return match ? parseMoney(match[1]) : 0;
+    }
+
+    function extractTax(text) {
+      const source = normalize(text).replace(/\s+/g, ' ');
+      const match = source.match(/IMPUESTO[\s\S]{0,80}?(?=(?:PRESTAMO|SEGURO SALUD|EXT\.|TOTALES|MONTO LIQUIDO)|$)/i);
+      const tokens = moneyTokens(match ? match[0] : '');
+      return { base: tokens.length > 1 ? tokens[0] : 0, tax: tokens.length ? tokens[tokens.length - 1] : 0 };
+    }
+
+    function extractPensionAmount(text) {
+      const source = normalize(text).replace(/\s+/g, ' ');
+      const direct = source.match(/(?:PENSION|ALIMENTOS|MONTO|TOTAL|TRANSFERENCIA|PAGO)[\s\S]{0,60}?(\d{1,3}(?:[.,]\d{3})+)/i);
+      if (direct) return parseMoney(direct[1]);
+      const tokens = moneyTokens(text).filter((n) => n >= 1000);
+      return tokens.length ? Math.max(...tokens) : 0;
+    }
+
+    function extractTotalGross(text) {
+      const tokens = totalTokens(text);
+      return tokens[0] || 0;
+    }
+
+    function extractTotalDeductions(text) {
+      const tokens = totalTokens(text);
+      return tokens[1] || 0;
+    }
+
+    function totalTokens(text) {
+      const source = normalize(text).replace(/\s+/g, ' ');
+      const idx = source.indexOf('TOTALES');
+      if (idx < 0) return [];
+      return moneyTokens(source.slice(idx, idx + 220));
+    }
+
+    function valueByHeader(row, headers, names) {
+      return names.reduce((total, name) => {
+        const needle = normalize(name);
+        const idx = headers.findIndex((header) => header.includes(needle));
+        return total + (idx >= 0 ? toNumber(row[idx]) : 0);
+      }, 0);
+    }
+
+    function valueByExactHeader(row, headers, names) {
+      return names.reduce((total, name) => {
+        const needle = normalize(name);
+        const idx = headers.findIndex((header) => header === needle);
+        return total + (idx >= 0 ? toNumber(row[idx]) : 0);
+      }, 0);
+    }
+
+    function sum(entries, key) {
+      return entries.reduce((s, entry) => s + toNumber(entry[key]), 0);
+    }
+
+    function labelType(type) {
+      return { salary: 'Sueldo', bonus: 'Bono', other: 'Otro ingreso', pension: 'Pension' }[type] || type;
+    }
+
+    function formatDate(date) {
+      return new Date(date + 'T00:00:00').toLocaleDateString('es-CL', { year: 'numeric', month: 'short', day: '2-digit' });
+    }
+
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c]));
+    }
+
+    function updateCount() {
+      $('dataCount').textContent = state.entries.length;
+    }
+
+    function refreshAll() {
+      refreshDashboard();
+      renderEntries();
+      taxSummary();
+    }
+
+    function initYears() {
+      const years = new Set([2024, 2025, 2026, new Date().getFullYear()]);
+      state.entries.forEach((entry) => years.add(Number(entry.taxYear) || Number(entry.date.slice(0, 4))));
+      const html = [...years].sort((a, b) => b - a).map((year) => `<option value="${year}">${year}</option>`).join('');
+      ['taxYear', 'dashYear', 'taxYearPanel'].forEach((id) => {
+        const el = $(id);
+        if (el) el.innerHTML = html;
+      });
+      setSelectedYear(new Date().getFullYear());
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await load();
+      initYears();
+      const now = new Date();
+      $('dashMonth').value = `${selectedYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      $('entryDate').value = now.toISOString().slice(0, 10);
+      $('utmValue').value = state.settings.utmValue;
+      $('extraCredits').value = state.settings.extraCredits;
+      $('analysisFrom').value = `${selectedYear()}-01`;
+      $('analysisTo').value = `${selectedYear()}-12`;
+      $('afpInitial').value = state.settings.afpInitial || '';
+
+      document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => switchTab(button.dataset.tab)));
+      document.addEventListener('click', (event) => {
+        const target = event.target.closest('[data-analysis]');
+        if (target) setAnalysisMetric(target.dataset.analysis);
+      });
+      $('dashMonth').addEventListener('change', () => {
+        setSelectedYear(Number($('dashMonth').value.slice(0, 4)));
+        refreshAll();
+      });
+      ['analysisMetric', 'analysisFrom', 'analysisTo'].forEach((id) => $(id).addEventListener('change', refreshAnalysis));
+      $('afpInitial').addEventListener('input', () => {
+        state.settings.afpInitial = toNumber($('afpInitial').value);
+        saveToDb(state);
+        refreshAnalysis();
+      });
+      ['taxYear', 'dashYear', 'taxYearPanel'].forEach((id) => {
+        $(id).addEventListener('change', (event) => {
+          setSelectedYear(Number(event.target.value));
+          refreshAll();
+        });
+      });
+      $('saveSettingsBtn').addEventListener('click', saveSettings);
+      $('saveEntryBtn').addEventListener('click', saveManualEntry);
+      $('clearEntryBtn').addEventListener('click', clearManualForm);
+      $('excelArea').addEventListener('click', () => $('excelFile').click());
+      $('pdfArea').addEventListener('click', () => $('pdfFile').click());
+      $('excelFile').addEventListener('change', (e) => Array.from(e.target.files || []).forEach(processExcel));
+      $('pdfFile').addEventListener('change', (e) => processPDFs(Array.from(e.target.files || [])));
+      $('exportBtn').addEventListener('click', exportData);
+      $('importBtn').addEventListener('click', () => $('backupFile').click());
+      $('backupFile').addEventListener('change', importData);
+      $('clearBtn').addEventListener('click', () => {
+        if (!confirm('Borrar todos los datos guardados?')) return;
+        state.entries = [];
+        save();
+      });
+
+      updateCount();
+      refreshAll();
+      if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      }
+    });
+  </script>
+</body>
+</html>
