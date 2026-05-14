@@ -1,8 +1,8 @@
 {
   "name": "Control Ingresos",
   "short_name": "Ingresos",
-  "description": "Control local de liquidaciones, pension, AFP, Isapre e impuestos.",
-  "start_url": "./app.html?v=9",
+  "description": "Control local de liquidaciones, pensión, AFP, Isapre e impuestos.",
+  "start_url": "./launcher.html?v=15",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
