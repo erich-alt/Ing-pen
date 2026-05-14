@@ -1,0 +1,72 @@
+name: Make app offline-ready
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/make-offline.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  make-offline:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download local vendor libraries
+        run: |
+          mkdir -p vendor
+          curl -L --fail https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js -o vendor/xlsx.full.min.js
+          curl -L --fail https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js -o vendor/pdf.min.js
+          curl -L --fail https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js -o vendor/pdf.worker.min.js
+      - name: Write service worker
+        run: |
+          cat > sw.js <<'EOF'
+          const CACHE_NAME = 'control-ingresos-offline-v1';
+          const ASSETS = [
+            './',
+            './index.html',
+            './manifest.webmanifest',
+            './icon-180.png',
+            './icon-192.png',
+            './icon-512.png',
+            './vendor/xlsx.full.min.js',
+            './vendor/pdf.min.js',
+            './vendor/pdf.worker.min.js'
+          ];
+
+          self.addEventListener('install', (event) => {
+            event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
+            self.skipWaiting();
+          });
+
+          self.addEventListener('activate', (event) => {
+            event.waitUntil(
+              caches.keys().then((keys) => Promise.all(
+                keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+              ))
+            );
+            self.clients.claim();
+          });
+
+          self.addEventListener('fetch', (event) => {
+            if (event.request.method !== 'GET') return;
+            event.respondWith(
+              caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
+                const copy = response.clone();
+                caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+                return response;
+              }).catch(() => caches.match('./index.html')))
+            );
+          });
+          EOF
+          sed -i 's/^          //' sw.js
+      - name: Commit offline files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add vendor sw.js
+          git diff --cached --quiet || git commit -m "Make app work offline"
+          git push
