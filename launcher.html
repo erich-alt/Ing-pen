@@ -15,12 +15,12 @@
   <script>
     (async function () {
       try {
-        const response = await fetch('./index.html?v=base6', { cache: 'no-store' });
+        const response = await fetch('./index.html?v=base7', { cache: 'no-store' });
         let html = await response.text();
-        if (!html.includes('fixes.js')) {
-          const patchTag = '<script src="./fixes.js?v=6"></scr' + 'ipt>';
-          html = html.replace('</body>', '  ' + patchTag + '\n</body>');
-        }
+        const fixesTag = '<script src="./fixes.js?v=7"></scr' + 'ipt>';
+        const pensionTag = '<script src="./pension-ui.js?v=1"></scr' + 'ipt>';
+        if (!html.includes('fixes.js')) html = html.replace('</body>', '  ' + fixesTag + '\n</body>');
+        if (!html.includes('pension-ui.js')) html = html.replace('</body>', '  ' + pensionTag + '\n</body>');
         document.open();
         document.write(html);
         document.close();
