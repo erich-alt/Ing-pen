@@ -1,7 +1,7 @@
-const CACHE_NAME = 'control-ingresos-v2';
+const CACHE_NAME = 'control-ingresos-offline-v1';
 const ASSETS = [
   './',
-  './app_iphone_fix.html',
+  './index.html',
   './manifest.webmanifest',
   './icon-180.png',
   './icon-192.png',
@@ -32,6 +32,6 @@ self.addEventListener('fetch', (event) => {
       const copy = response.clone();
       caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
       return response;
-    }).catch(() => caches.match('./app_iphone_fix.html')))
+    }).catch(() => caches.match('./index.html')))
   );
 });
