@@ -1,26 +1,32 @@
-﻿# Control Ingresos PWA
+# Ing-pen
 
-App local instalable para iPhone como PWA.
+Prototipo navegable de una aplicacion chilena para gestion y pago de pensiones de alimentos.
 
-## Publicar rapido
+## Abrir la app
 
-### Opcion GitHub Pages
-1. Crea un repositorio nuevo.
-2. Sube todo el contenido de esta carpeta.
-3. En Settings > Pages, selecciona Deploy from branch y la rama main, carpeta root.
-4. Abre la URL publicada en Safari del iPhone.
-5. Toca Compartir > Agregar a pantalla de inicio.
+- App publica: https://erich-alt.github.io/Ing-pen/
+- Vista avanzada: https://erich-alt.github.io/Ing-pen/v2-wallet.html
+- Repositorio: https://github.com/erich-alt/Ing-pen
 
-### Opcion Cloudflare Pages / Netlify
-1. Arrastra esta carpeta o el ZIP en el panel de Pages/Netlify.
-2. Abre la URL HTTPS publicada en Safari del iPhone.
-3. Toca Compartir > Agregar a pantalla de inicio.
+## Que incluye
+
+- Perfil del alimentante con monto mensual, historial de pagos y deuda.
+- Simulacion de valores en CLP, UTM, UF e IPC.
+- Flujo de pagos con opciones tipo Khipu, Webpay u otros medios.
+- Carga de comprobantes para pagos ya realizados.
+- Vista conceptual para tribunal, conciliacion bancaria y seguimiento de morosidad.
+- Vista conceptual para receptor o beneficiario con notificaciones y registro historico.
+- Soporte PWA para abrir desde celular e instalar en pantalla de inicio.
 
 ## Privacidad
-Los datos, PDFs y respaldos se guardan en el navegador del iPhone usando IndexedDB. El hosting solo sirve los archivos de la app.
+
+Este prototipo guarda datos de prueba en el navegador. No debe usarse aun con datos reales, causas judiciales reales ni comprobantes sensibles sin implementar autenticacion, cifrado, permisos por rol, auditoria y tratamiento legal de datos personales.
 
 ## Archivos principales
-- index.html: app principal
-- manifest.webmanifest: configuracion PWA
-- sw.js: cache offline
-- vendor/: librerias locales de Excel y PDF
+
+- `index.html`: app principal.
+- `v2-wallet.html`: cargador de la version avanzada.
+- `v2-stage*.js`: modulos progresivos de funcionalidades.
+- `manifest.webmanifest`: configuracion PWA.
+- `sw.js`: cache offline.
+- `vendor/`: librerias locales para Excel y PDF.
