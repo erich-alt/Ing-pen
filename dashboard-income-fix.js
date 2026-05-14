@@ -1,7 +1,18 @@
 (function(){
-  const VERSION='dashboard-income-fix-2026-05-14-1';
+  const VERSION='dashboard-income-fix-2026-05-14-2';
   function $(id){return document.getElementById(id)}
-  function n(v){return Number(String(v||'').replace(/\./g,'').replace(/,/g,'.').replace(/[^0-9.-]/g,''))||0}
+  function n(v){
+    if(typeof v==='number') return Number.isFinite(v)?v:0;
+    let s=String(v||'').trim().replace(/\$/g,'').replace(/\s/g,'');
+    if(!s) return 0;
+    // Formatos chilenos: 3.920.471 o 3.920.471,50
+    if(/^[-+]?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) return Number(s.replace(/\./g,'').replace(',','.'))||0;
+    // Formatos decimales: 3920471.00 o 787815.4166
+    if(/^[-+]?\d+(\.\d+)?$/.test(s)) return Number(s)||0;
+    // Formato con coma decimal sin miles
+    if(/^[-+]?\d+,\d+$/.test(s)) return Number(s.replace(',','.'))||0;
+    return Number(s.replace(/[^0-9.-]/g,''))||0;
+  }
   function money(v){return new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Math.round(n(v)))}
   function norm(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase()}
   function appState(){try{if(typeof state!=='undefined'&&state&&Array.isArray(state.entries))return state}catch(e){} return null}
