@@ -15,10 +15,11 @@
   <script>
     (async function () {
       try {
-        const response = await fetch('./index.html?v=base', { cache: 'no-store' });
+        const response = await fetch('./index.html?v=base6', { cache: 'no-store' });
         let html = await response.text();
         if (!html.includes('fixes.js')) {
-          html = html.replace('</body>', '  <script src="./fixes.js?v=4"><\\/script>\n</body>');
+          const patchTag = '<script src="./fixes.js?v=6"></scr' + 'ipt>';
+          html = html.replace('</body>', '  ' + patchTag + '\n</body>');
         }
         document.open();
         document.write(html);
