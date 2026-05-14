@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Finanzas Pro" />
+  <meta name="theme-color" content="#0f766e" />
+  <link rel="apple-touch-icon" href="icon-180.png" />
+  <title>Finanzas Pro V2</title>
+  <style>
+    :root{
+      --bg:#f5f7f4; --card:#ffffff; --card2:#eff8f4; --text:#13221f; --muted:#687672;
+      --line:#dfe8e3; --primary:#0f766e; --primary2:#0b5f59; --ok:#15803d;
+      --warn:#b45309; --danger:#be123c; --soft:#e7f3ef; --shadow:0 8px 24px rgba(19,34,31,.08);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;}
+    body{padding-bottom:calc(88px + env(safe-area-inset-bottom));}
+    .app{max-width:520px;margin:0 auto;min-height:100vh;}
+    .topbar{position:sticky;top:0;z-index:20;background:rgba(245,247,244,.95);backdrop-filter:blur(18px);padding:calc(16px + env(safe-area-inset-top)) 16px 12px;border-bottom:1px solid var(--line)}
+    .toprow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    h1{font-size:25px;line-height:1.05;margin:0;letter-spacing:-.5px}.sub{margin-top:5px;color:var(--muted);font-size:13px}.year{min-width:96px;height:48px;border:1px solid var(--line);border-radius:16px;background:white;color:var(--primary2);font-size:20px;font-weight:850;text-align:center;padding:0 10px}
+    main{padding:14px 14px 0}.screen{display:none}.screen.active{display:block}.card{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:16px;margin-bottom:14px}.card.flat{box-shadow:none;background:#fbfdfc}.card h2{font-size:20px;margin:0 0 14px;letter-spacing:-.25px}.eyebrow{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:850;margin:0 0 8px}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.metric{min-height:102px;background:#eef8f4;border:1px solid #cfe7df;border-radius:18px;padding:13px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}.metric.ok{background:#effdf4;border-color:#bbf7d0}.metric.warn{background:#fff7ed;border-color:#fed7aa}.metric.danger{background:#fff1f2;border-color:#fecdd3}.mlabel{font-size:12px;color:#61716c;font-weight:850;text-transform:uppercase;letter-spacing:.4px;line-height:1.2}.mvalue{font-size:clamp(21px,6vw,30px);font-weight:900;line-height:1.02;color:var(--primary2);word-break:break-word}.metric.warn .mvalue{color:var(--warn)}.metric.danger .mvalue{color:var(--danger)}.small{font-size:12px;color:var(--muted);line-height:1.35}.row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #edf2ef}.row:last-child{border-bottom:0}.rtitle{font-weight:850;font-size:15px}.rsub{font-size:12px;color:var(--muted);margin-top:3px}.rval{font-weight:900;color:var(--primary2);white-space:nowrap}.chips{display:flex;gap:8px;overflow-x:auto;padding:1px 0 10px;margin:0 -2px}.chip{border:1px solid var(--line);background:white;color:#43514d;border-radius:999px;padding:9px 12px;font-weight:800;font-size:13px;white-space:nowrap}.chip.active{background:var(--primary);color:white;border-color:var(--primary)}
+    label{display:block;font-weight:850;color:#5f6f6b;font-size:13px;margin:0 0 6px}input,select,textarea{width:100%;min-height:50px;border:1px solid var(--line);border-radius:16px;background:#fbfcfb;color:var(--text);font:inherit;font-size:16px;padding:12px}textarea{min-height:90px;resize:vertical}.form{display:grid;gap:12px}.split{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{width:100%;min-height:52px;border:0;border-radius:16px;background:var(--primary);color:white;font-weight:900;font-size:16px;padding:12px}.btn.secondary{background:#e6f2ee;color:var(--primary2);border:1px solid #c7e2d9}.btn.danger{background:#fff1f2;color:var(--danger);border:1px solid #fecdd3}.btnrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px}.note{background:#fff7ed;border:1px solid #fed7aa;border-left:5px solid var(--warn);border-radius:16px;padding:12px;font-size:13px;color:#7c2d12;line-height:1.4}
+    .bottom{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(255,255,255,.94);backdrop-filter:blur(20px);border-top:1px solid var(--line);padding:9px 10px calc(9px + env(safe-area-inset-bottom));}.bottom-inner{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.nav{border:0;background:transparent;min-height:56px;border-radius:17px;color:#5e6c68;font-weight:850;font-size:11px;display:grid;place-items:center;gap:2px}.nav .ico{font-size:21px;line-height:1}.nav.active{background:#e4f2ed;color:var(--primary2)}
+    .bar{height:9px;background:#e6eeea;border-radius:999px;overflow:hidden}.bar span{display:block;height:100%;background:var(--primary);border-radius:999px}.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.seg button{min-height:44px;border-radius:14px;border:1px solid var(--line);background:white;font-weight:850;color:#5e6c68}.seg button.active{background:var(--primary);color:white;border-color:var(--primary)}.hidden{display:none!important}.empty{padding:20px;text-align:center;color:var(--muted);font-weight:700}.pill{font-size:11px;font-weight:900;border-radius:999px;padding:5px 8px;background:#e6f2ee;color:var(--primary2)}
+    @media(max-width:390px){.grid2{gap:8px}.metric{min-height:96px;padding:11px}.mvalue{font-size:24px}.topbar{padding-left:12px;padding-right:12px}main{padding-left:10px;padding-right:10px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="toprow"><div><h1>Finanzas Pro</h1><div class="sub">Ingresos, gastos, pensión, vehículos y seguros</div></div><select id="year" class="year"></select></div>
+  </header>
+  <main>
+    <section id="scr-dashboard" class="screen active">
+      <div class="card flat"><div class="eyebrow">Mes seleccionado</div><input type="month" id="month" /></div>
+      <div class="grid2">
+        <div class="metric"><div class="mlabel">Sueldo líquido</div><div class="mvalue" id="kpiSalary">$0</div></div>
+        <div class="metric ok"><div class="mlabel">Bono proporcional</div><div class="mvalue" id="kpiBonus">$0</div></div>
+        <div class="metric warn"><div class="mlabel">Pensión alimenticia</div><div class="mvalue" id="kpiPension">$0</div></div>
+        <div class="metric danger"><div class="mlabel">% pensión</div><div class="mvalue" id="kpiPct">0%</div></div>
+      </div>
+      <div class="card"><h2>Resumen del mes</h2><div id="monthSummary"></div></div>
+      <div class="card"><h2>Últimos movimientos</h2><div id="recentList"></div></div>
+    </section>
+
+    <section id="scr-income" class="screen">
+      <div class="seg"><button class="active" data-income-tab="income-list">Resumen</button><button data-income-tab="income-form">Nuevo</button><button data-income-tab="income-import">Cargar</button></div>
+      <div id="income-list" class="income-tab"><div class="card"><h2>Ingresos del año</h2><div id="incomeList"></div></div></div>
+      <div id="income-form" class="income-tab hidden"><div class="card"><h2>Nuevo ingreso</h2><div class="form">
+        <div><label>Tipo</label><select id="incomeType"><option value="salary">Sueldo</option><option value="bonus">Bono</option><option value="extra">Ingreso extra</option><option value="tax_refund">Devolución renta</option></select></div>
+        <div class="split"><div><label>Fecha de pago</label><input id="incomeDate" type="date"></div><div><label>Año renta</label><input id="incomeTaxYear" type="number"></div></div>
+        <div><label>Descripción</label><input id="incomeDesc" placeholder="Ej. Sueldo abril 2026"></div>
+        <div class="split"><div><label>Total haberes / bruto</label><input id="incomeGross" inputmode="numeric"></div><div><label>Líquido</label><input id="incomeNet" inputmode="numeric"></div></div>
+        <div class="split"><div><label>Impuesto retenido</label><input id="incomeTax" inputmode="numeric"></div><div><label>Base tributable</label><input id="incomeTaxable" inputmode="numeric"></div></div>
+        <button class="btn" id="saveIncome">Guardar ingreso</button>
+      </div></div></div>
+      <div id="income-import" class="income-tab hidden"><div class="card"><h2>Cargar ingresos</h2><div class="note">Esta versión V2 ya ordena la información. La importación Excel/PDF se conectará a la base actual; por ahora puedes mantener la carga masiva en la app anterior y usar “Migrar datos” en V2.</div><button class="btn secondary" id="migrateOld">Migrar datos de app anterior</button></div></div>
+    </section>
+
+    <section id="scr-expense" class="screen">
+      <div class="seg"><button class="active" data-exp-tab="expense-list">Resumen</button><button data-exp-tab="expense-form">Gasto</button><button data-exp-tab="pension-form">Pensión</button></div>
+      <div id="expense-list" class="exp-tab"><div class="card"><h2>Gastos y pensiones</h2><div id="expenseList"></div></div></div>
+      <div id="expense-form" class="exp-tab hidden"><div class="card"><h2>Nuevo gasto</h2><div class="form">
+        <div class="split"><div><label>Fecha</label><input id="expenseDate" type="date"></div><div><label>Categoría</label><select id="expenseCat"><option>Hogar</option><option>Supermercado</option><option>Regalos</option><option>Planificado</option><option>Otro</option></select></div></div>
+        <div><label>Descripción</label><input id="expenseDesc"></div><div><label>Monto</label><input id="expenseAmount" inputmode="numeric"></div><button class="btn" id="saveExpense">Guardar gasto</button>
+      </div></div></div>
+      <div id="pension-form" class="exp-tab hidden"><div class="card"><h2>Pensión alimenticia</h2><div class="form">
+        <div class="split"><div><label>Fecha de pago</label><input id="pensionPayDate" type="date"></div><div><label>Mes pensión</label><input id="pensionMonth" type="month"></div></div>
+        <div><label>Monto pagado</label><input id="pensionAmount" inputmode="numeric"></div><div class="note">El porcentaje se calcula contra sueldo líquido + bono proporcional del mes pensión.</div><button class="btn" id="savePension">Guardar pensión</button>
+      </div></div></div>
+    </section>
+
+    <section id="scr-vehicle" class="screen">
+      <div class="card"><h2>Vehículos</h2><div class="grid2"><div class="metric"><div class="mlabel">Gasto mes</div><div class="mvalue" id="kpiVehicleMonth">$0</div></div><div class="metric ok"><div class="mlabel">Gasto año</div><div class="mvalue" id="kpiVehicleYear">$0</div></div></div></div>
+      <div class="card"><h2>Nuevo gasto vehículo</h2><div class="form"><div class="split"><div><label>Vehículo</label><select id="vehicleName"><option>Subaru Legacy 3.0R</option><option>Toyota Corolla Cross</option><option>Otro</option></select></div><div><label>Fecha</label><input id="vehicleDate" type="date"></div></div><div class="split"><div><label>Tipo</label><select id="vehicleType"><option>Combustible</option><option>Mantención</option><option>Seguro</option><option>Permiso circulación</option><option>Reparación</option></select></div><div><label>Monto</label><input id="vehicleAmount" inputmode="numeric"></div></div><button class="btn" id="saveVehicle">Guardar vehículo</button></div></div>
+      <div class="card"><h2>Histórico</h2><div id="vehicleList"></div></div>
+    </section>
+
+    <section id="scr-more" class="screen">
+      <div class="chips"><button class="chip active" data-more="insurance">Seguro</button><button class="chip" data-more="tax">Impuestos</button><button class="chip" data-more="reports">Reportes</button></div>
+      <div id="more-insurance" class="more-tab"><div class="card"><h2>Seguro complementario</h2><div class="grid2"><div class="metric"><div class="mlabel">Pendiente recuperar</div><div class="mvalue" id="kpiInsurancePending">$0</div></div><div class="metric ok"><div class="mlabel">Recuperado</div><div class="mvalue" id="kpiInsuranceRecovered">$0</div></div></div></div><div class="card"><h2>Nuevo gasto/reembolso</h2><div class="form"><div class="split"><div><label>Fecha</label><input id="insuranceDate" type="date"></div><div><label>Estado</label><select id="insuranceStatus"><option value="pending">Pendiente</option><option value="recovered">Reembolsado</option></select></div></div><div><label>Descripción</label><input id="insuranceDesc"></div><div class="split"><div><label>Costo total</label><input id="insuranceCost" inputmode="numeric"></div><div><label>Reembolso esperado</label><input id="insuranceRefund" inputmode="numeric"></div></div><button class="btn" id="saveInsurance">Guardar seguro</button></div></div></div>
+      <div id="more-tax" class="more-tab hidden"><div class="card"><h2>Impuestos</h2><div id="taxSummary"></div></div></div>
+      <div id="more-reports" class="more-tab hidden"><div class="card"><h2>Respaldos</h2><div class="btnrow"><button class="btn secondary" id="exportBackup">Descargar respaldo</button><button class="btn secondary" id="importBackupBtn">Importar respaldo</button></div><input class="hidden" type="file" id="importBackup" accept="application/json"><button class="btn danger" id="clearData" style="margin-top:10px">Borrar datos V2</button></div></div>
+    </section>
+  </main>
+</div>
+<nav class="bottom"><div class="bottom-inner"><button class="nav active" data-screen="dashboard"><span class="ico">⌂</span>Inicio</button><button class="nav" data-screen="income"><span class="ico">＋</span>Ingresos</button><button class="nav" data-screen="expense"><span class="ico">−</span>Gastos</button><button class="nav" data-screen="vehicle"><span class="ico">◉</span>Vehículos</button><button class="nav" data-screen="more"><span class="ico">⋯</span>Más</button></div></nav>
+<script>
+const KEY='finanzas_pro_v2';
+const $=id=>document.getElementById(id);
+const fmt=n=>new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Math.round(Number(n||0)));
+const parse=v=>{if(typeof v==='number')return v;let s=String(v||'').trim().replace(/\$/g,'').replace(/\s/g,'');if(!s)return 0;if(/^[-+]?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s))return Number(s.replace(/\./g,'').replace(',','.'))||0;if(/^[-+]?\d+(\.\d+)?$/.test(s))return Number(s)||0;if(/^[-+]?\d+,\d+$/.test(s))return Number(s.replace(',','.'))||0;return Number(s.replace(/[^0-9.-]/g,''))||0};
+const today=()=>new Date().toISOString().slice(0,10);const thisMonth=()=>new Date().toISOString().slice(0,7);const yearOf=d=>Number(String(d||'').slice(0,4))||new Date().getFullYear();const ym=d=>String(d||'').slice(0,7);
+let db=load();
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||seed()}catch(e){return seed()}}function seed(){return{incomes:[],expenses:[],pensions:[],vehicles:[],insurance:[],settings:{}}}function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
+function initDates(){['incomeDate','expenseDate','vehicleDate','insuranceDate','pensionPayDate'].forEach(id=>$(id).value=today());$('month').value=thisMonth();$('pensionMonth').value=thisMonth();$('incomeTaxYear').value=new Date().getFullYear()}
+function buildYears(){const ys=new Set([2023,2024,2025,2026,new Date().getFullYear()]);db.incomes.forEach(x=>ys.add(Number(x.taxYear||yearOf(x.date))));db.expenses.forEach(x=>ys.add(yearOf(x.date)));db.pensions.forEach(x=>ys.add(yearOf(x.month+'-01')));const cur=$('year').value||String(new Date().getFullYear());$('year').innerHTML=[...ys].filter(Boolean).sort((a,b)=>b-a).map(y=>`<option value="${y}">${y}</option>`).join('');$('year').value=[...ys].includes(Number(cur))?cur:String(new Date().getFullYear())}
+function incomeForMonth(month){const y=yearOf(month+'-01');const salary=db.incomes.filter(x=>x.type==='salary'&&ym(x.date)===month).reduce((a,x)=>a+Number(x.net||0),0);const bonusAnnual=db.incomes.filter(x=>x.type==='bonus'&&Number(x.taxYear)===y).reduce((a,x)=>a+Number(x.net||0),0);return{salary,bonusMonthly:bonusAnnual/12,bonusAnnual}}
+function pensionForMonth(month){return db.pensions.filter(x=>x.month===month).reduce((a,x)=>a+Number(x.amount||0),0)}function expensesForMonth(month){return db.expenses.filter(x=>ym(x.date)===month).reduce((a,x)=>a+Number(x.amount||0),0)}
+function row(title,sub,val){return `<div class="row"><div><div class="rtitle">${title}</div><div class="rsub">${sub||''}</div></div><div class="rval">${val||''}</div></div>`}
+function render(){buildYears();const month=$('month').value||thisMonth();const year=Number($('year').value);const inc=incomeForMonth(month);const pension=pensionForMonth(month);const exp=expensesForMonth(month);const base=inc.salary+inc.bonusMonthly;$('kpiSalary').textContent=fmt(inc.salary);$('kpiBonus').textContent=fmt(inc.bonusMonthly);$('kpiPension').textContent=fmt(pension);$('kpiPct').textContent=base?`${(pension/base*100).toFixed(1)}%`:'0%';$('monthSummary').innerHTML=row('Ingreso base',`Sueldo + bono proporcional`,fmt(base))+row('Gastos del mes','Sin seguro complementario ni vehículos',fmt(exp))+row('Disponible estimado','Ingreso base - pensión - gastos',fmt(base-pension-exp));
+const all=[...db.incomes.map(x=>({...x,kind:'Ingreso'})),...db.expenses.map(x=>({...x,kind:'Gasto'})),...db.pensions.map(x=>({date:x.payDate,description:'Pensión '+x.month,amount:x.amount,kind:'Pensión'}))].sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,8);$('recentList').innerHTML=all.length?all.map(x=>row(`${x.kind}: ${x.description||x.type}`,x.date,fmt(x.amount||x.net))).join(''):'<div class="empty">Sin movimientos todavía</div>';
+$('incomeList').innerHTML=db.incomes.filter(x=>Number(x.taxYear||yearOf(x.date))===year).sort((a,b)=>String(b.date).localeCompare(String(a.date))).map(x=>row(x.description||x.type,`${x.date} · año renta ${x.taxYear||yearOf(x.date)}`,fmt(x.net||x.amount))).join('')||'<div class="empty">Sin ingresos este año</div>';
+$('expenseList').innerHTML=[...db.expenses.filter(x=>yearOf(x.date)===year).map(x=>row(x.description||x.category,x.date,fmt(x.amount))),...db.pensions.filter(x=>yearOf(x.month+'-01')===year).map(x=>row('Pensión alimenticia',`Pagada ${x.payDate} · mes ${x.month}`,fmt(x.amount)))].join('')||'<div class="empty">Sin gastos este año</div>';
+const vm=db.vehicles.filter(x=>ym(x.date)===month).reduce((a,x)=>a+x.amount,0);const vy=db.vehicles.filter(x=>yearOf(x.date)===year).reduce((a,x)=>a+x.amount,0);$('kpiVehicleMonth').textContent=fmt(vm);$('kpiVehicleYear').textContent=fmt(vy);$('vehicleList').innerHTML=db.vehicles.filter(x=>yearOf(x.date)===year).map(x=>row(x.vehicle,x.date+' · '+x.type,fmt(x.amount))).join('')||'<div class="empty">Sin gastos de vehículo</div>';
+const pend=db.insurance.filter(x=>x.status==='pending').reduce((a,x)=>a+x.refund,0);const rec=db.insurance.filter(x=>x.status==='recovered'&&yearOf(x.date)===year).reduce((a,x)=>a+x.refund,0);$('kpiInsurancePending').textContent=fmt(pend);$('kpiInsuranceRecovered').textContent=fmt(rec);$('taxSummary').innerHTML=row('Renta '+year,'Estimación simple desde ingresos cargados',fmt(db.incomes.filter(x=>Number(x.taxYear||yearOf(x.date))===year).reduce((a,x)=>a+Number(x.taxable||x.gross||0),0)))}
+function addIncome(){const type=$('incomeType').value;const date=$('incomeDate').value||today();const taxYear=Number($('incomeTaxYear').value)|| (type==='bonus'?yearOf(date)-1:yearOf(date));db.incomes.push({id:Date.now(),type,date,taxYear,description:$('incomeDesc').value||type,gross:parse($('incomeGross').value),net:parse($('incomeNet').value),tax:parse($('incomeTax').value),taxable:parse($('incomeTaxable').value)});save()}
+function addExpense(){db.expenses.push({id:Date.now(),date:$('expenseDate').value||today(),category:$('expenseCat').value,description:$('expenseDesc').value||$('expenseCat').value,amount:parse($('expenseAmount').value)});save()}
+function addPension(){db.pensions.push({id:Date.now(),payDate:$('pensionPayDate').value||today(),month:$('pensionMonth').value||thisMonth(),amount:parse($('pensionAmount').value)});save()}
+function addVehicle(){db.vehicles.push({id:Date.now(),vehicle:$('vehicleName').value,date:$('vehicleDate').value||today(),type:$('vehicleType').value,amount:parse($('vehicleAmount').value)});save()}
+function addInsurance(){db.insurance.push({id:Date.now(),date:$('insuranceDate').value||today(),status:$('insuranceStatus').value,description:$('insuranceDesc').value,cost:parse($('insuranceCost').value),refund:parse($('insuranceRefund').value)});save()}
+function migrateOld(){try{const old=JSON.parse(localStorage.getItem('ingresos_v4')||'{}');let count=0;(old.entries||[]).forEach(e=>{const d=e.date||e.paymentDate||today();const desc=e.description||e.desc||'';const t=String(e.type||'').toLowerCase();if(t.includes('pension')||desc.toLowerCase().includes('pensión')||desc.toLowerCase().includes('pension')){db.pensions.push({id:Date.now()+count,payDate:e.paymentDate||d,month:e.pensionMonth||ym(d),amount:parse(e.pensionPayment||e.amount||e.net||e.gross)});count++;}else{const isBonus=t.includes('bonus')||t.includes('bono')||desc.toLowerCase().includes('bono');db.incomes.push({id:Date.now()+count,type:isBonus?'bonus':'salary',date:d,taxYear:e.taxYear||(isBonus?yearOf(d)-1:yearOf(d)),description:desc||e.name||'Ingreso migrado',gross:parse(e.gross||e.amount),net:parse(e.net||e.liquido||e.amount),tax:parse(e.tax||e.impuesto),taxable:parse(e.taxable||e.gross||e.amount)});count++;}});save();alert('Migrados '+count+' registros desde la app anterior.')}catch(err){alert('No pude migrar datos anteriores')}}
+function exportBackup(){const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='finanzas-pro-v2-respaldo.json';a.click();URL.revokeObjectURL(a.href)}
+function importBackup(file){const r=new FileReader();r.onload=()=>{try{db=JSON.parse(r.result);save()}catch(e){alert('Archivo no válido')}};r.readAsText(file)}
+function bind(){document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$('scr-'+b.dataset.screen).classList.add('active')});document.querySelectorAll('[data-income-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-income-tab]').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.income-tab').forEach(x=>x.classList.add('hidden'));$(b.dataset.incomeTab).classList.remove('hidden')});document.querySelectorAll('[data-exp-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-exp-tab]').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.exp-tab').forEach(x=>x.classList.add('hidden'));$(b.dataset.expTab).classList.remove('hidden')});document.querySelectorAll('[data-more]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-more]').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.more-tab').forEach(x=>x.classList.add('hidden'));$('more-'+b.dataset.more).classList.remove('hidden')});$('saveIncome').onclick=addIncome;$('saveExpense').onclick=addExpense;$('savePension').onclick=addPension;$('saveVehicle').onclick=addVehicle;$('saveInsurance').onclick=addInsurance;$('year').onchange=render;$('month').onchange=render;$('migrateOld').onclick=migrateOld;$('exportBackup').onclick=exportBackup;$('importBackupBtn').onclick=()=>$('importBackup').click();$('importBackup').onchange=e=>e.target.files[0]&&importBackup(e.target.files[0]);$('clearData').onclick=()=>{if(confirm('¿Borrar datos V2 de este iPhone?')){db=seed();save()}}}
+initDates();bind();render();
+</script>
+</body>
+</html>
