@@ -1,7 +1,9 @@
-const CACHE_NAME = 'control-ingresos-offline-v1';
+const CACHE_NAME = 'control-ingresos-offline-v6';
 const ASSETS = [
   './',
+  './launcher.html',
   './index.html',
+  './fixes.js',
   './manifest.webmanifest',
   './icon-180.png',
   './icon-192.png',
@@ -32,6 +34,6 @@ self.addEventListener('fetch', (event) => {
       const copy = response.clone();
       caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
       return response;
-    }).catch(() => caches.match('./index.html')))
+    }).catch(() => caches.match('./launcher.html') || caches.match('./index.html')))
   );
 });
