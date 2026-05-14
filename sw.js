@@ -1,9 +1,10 @@
-const CACHE_NAME = 'control-ingresos-offline-v6';
+const CACHE_NAME = 'control-ingresos-offline-v7';
 const ASSETS = [
   './',
   './launcher.html',
   './index.html',
   './fixes.js',
+  './pension-ui.js',
   './manifest.webmanifest',
   './icon-180.png',
   './icon-192.png',
