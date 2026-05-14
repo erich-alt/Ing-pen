@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Finanzas Integrada">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <title>Finanzas Integrada</title>
+</head>
+<body>
+  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:24px;color:#0f302d;">Cargando Finanzas Integrada...</div>
+  <script>
+    (async function () {
+      try {
+        const response = await fetch('./index.html?v=base14', { cache: 'no-store' });
+        let html = await response.text();
+        const fixesTag = '<script src="./fixes.js?v=8"></scr' + 'ipt>';
+        const pensionTag = '<script src="./pension-ui.js?v=2"></scr' + 'ipt>';
+        const dashboardTag = '<script src="./dashboard-v2.js?v=1"></scr' + 'ipt>';
+        const taxTag = '<script src="./tax-cap-fix.js?v=1"></scr' + 'ipt>';
+        const polishTag = '<script src="./iphone-polish.js?v=1"></scr' + 'ipt>';
+        const finanzasTag = '<script src="./finanzas-integracion.js?v=1"></scr' + 'ipt>';
+        if (!html.includes('fixes.js')) html = html.replace('</body>', '  ' + fixesTag + '\n</body>');
+        if (!html.includes('pension-ui.js')) html = html.replace('</body>', '  ' + pensionTag + '\n</body>');
+        if (!html.includes('dashboard-v2.js')) html = html.replace('</body>', '  ' + dashboardTag + '\n</body>');
+        if (!html.includes('tax-cap-fix.js')) html = html.replace('</body>', '  ' + taxTag + '\n</body>');
+        if (!html.includes('iphone-polish.js')) html = html.replace('</body>', '  ' + polishTag + '\n</body>');
+        if (!html.includes('finanzas-integracion.js')) html = html.replace('</body>', '  ' + finanzasTag + '\n</body>');
+        html = html.replace('Control Ingresos', 'Finanzas Integrada');
+        document.open();
+        document.write(html);
+        document.close();
+      } catch (error) {
+        document.body.innerHTML = '<div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;padding:24px;"><h1>No se pudo abrir la app</h1><p>Abre una vez con internet para actualizar los archivos offline.</p></div>';
+      }
+    })();
+  </script>
+</body>
+</html>
