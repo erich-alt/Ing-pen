@@ -24,6 +24,7 @@
         const proTag = '<script src="./v2-stage7-pro.js?v=2"></scr' + 'ipt>';
         const planningAnalysisTag = '<script src="./v2-stage8-planning-analysis.js?v=2"></scr' + 'ipt>';
         const walletSyncTag = '<script src="./v2-stage9-wallet-sync.js?v=1"></scr' + 'ipt>';
+        const cleanupTag = '<script src="./v2-stage10-cleanup.js?v=1"></scr' + 'ipt>';
         if(!html.includes('v2-stage3.js')) html = html.replace('</body>', walletTag + '\n</body>');
         if(!html.includes('v2-stage4.js')) html = html.replace('</body>', stage4Tag + '\n</body>');
         if(!html.includes('v2-stage5-analysis.js')) html = html.replace('</body>', analysisTag + '\n</body>');
@@ -31,6 +32,7 @@
         if(!html.includes('v2-stage7-pro.js')) html = html.replace('</body>', proTag + '\n</body>');
         if(!html.includes('v2-stage8-planning-analysis.js')) html = html.replace('</body>', planningAnalysisTag + '\n</body>');
         if(!html.includes('v2-stage9-wallet-sync.js')) html = html.replace('</body>', walletSyncTag + '\n</body>');
+        if(!html.includes('v2-stage10-cleanup.js')) html = html.replace('</body>', cleanupTag + '\n</body>');
         document.open(); document.write(html); document.close();
       }catch(e){
         document.body.innerHTML = '<div class="loading">No se pudo cargar la app. Revisa conexion e intenta de nuevo.</div>';
