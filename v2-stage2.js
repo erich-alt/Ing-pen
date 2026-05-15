@@ -30,8 +30,8 @@
       expenses:[
         {id:301,date:'2026-05-03',category:'Supermercado',description:'Supermercado mensual',amount:420000},
         {id:302,date:'2026-05-06',category:'Hogar',description:'Servicios hogar',amount:185000},
-        {id:303,date:'2026-05-08',category:'Regalos',description:'Regalo cumpleaños',amount:62000},
-        {id:304,date:'2026-05-15',category:'Planificado',description:'Gasto planificado',amount:310000},
+        {id:303,date:'2026-05-08',category:'Regalos',description:'Regalo cumpleanos',amount:62000},
+        {id:304,date:'2026-05-15',category:'Hogar',description:'Cuenta mensual programada',amount:310000},
         {id:305,date:'2026-04-04',category:'Supermercado',description:'Supermercado abril',amount:395000},
         {id:306,date:'2026-04-10',category:'Hogar',description:'Servicios abril',amount:176000},
         {id:307,date:'2025-05-05',category:'Supermercado',description:'Supermercado mayo 2025',amount:370000},
@@ -46,13 +46,13 @@
       vehicles:[
         {id:501,vehicle:'Subaru Legacy 3.0R',date:'2026-05-09',type:'Combustible',amount:78000},
         {id:502,vehicle:'Toyota Corolla Cross',date:'2026-05-11',type:'Combustible',amount:56000},
-        {id:503,vehicle:'Subaru Legacy 3.0R',date:'2026-04-18',type:'Mantención',amount:145000},
+        {id:503,vehicle:'Subaru Legacy 3.0R',date:'2026-04-18',type:'Mantencion',amount:145000},
         {id:504,vehicle:'Toyota Corolla Cross',date:'2026-03-12',type:'Seguro',amount:69000}
       ],
       insurance:[
-        {id:601,date:'2026-05-02',status:'pending',description:'Exámenes Clínica Alemana',cost:185000,refund:82000},
-        {id:602,date:'2026-04-22',status:'recovered',description:'Kinesiología',cost:260000,refund:120000},
-        {id:603,date:'2026-03-10',status:'pending',description:'Consulta médica',cost:78000,refund:35000}
+        {id:601,date:'2026-05-02',status:'pending',description:'Examenes Clinica Alemana',cost:185000,refund:82000},
+        {id:602,date:'2026-04-22',status:'recovered',description:'Kinesiologia',cost:260000,refund:120000},
+        {id:603,date:'2026-03-10',status:'pending',description:'Consulta medica',cost:78000,refund:35000}
       ],
       settings:{demo:true,demoLoadedAt:new Date().toISOString()}
     };
@@ -70,17 +70,17 @@
   function drawMonthlyChart(db){
     let box=$('stage2MonthlyChart'); if(!box){const ref=$('monthSummary')?.closest('.card'); if(!ref)return; box=document.createElement('div');box.id='stage2MonthlyChart';box.className='card chart-card';ref.parentNode.insertBefore(box,ref.nextSibling)}
     const current=$('month')?.value||new Date().toISOString().slice(0,7);const months=monthsAround(current);const rows=months.map(m=>({m,inc:incomeForMonth(db,m).total,exp:expForMonth(db,m),pen:pensionForMonth(db,m)}));const max=Math.max(1,...rows.flatMap(r=>[r.inc,r.exp,r.pen]));
-    box.innerHTML=`<div class="chart-head"><div><div class="chart-title">Evolución 6 meses</div><div class="chart-sub">Ingreso base, gastos y pensión</div></div><div class="legend"><span><i class="dot income"></i>Ingreso</span><span><i class="dot exp"></i>Gastos</span><span><i class="dot pen"></i>Pensión</span></div></div><div class="mini-chart">${rows.map(r=>`<div class="barcol"><div class="bars"><div class="barA" style="height:${Math.max(4,r.inc/max*138)}px"></div><div class="barB" style="height:${Math.max(4,r.exp/max*138)}px"></div><div class="barC" style="height:${Math.max(4,r.pen/max*138)}px"></div></div><div class="barlabel">${monthName(r.m)}</div></div>`).join('')}</div>`;
+    box.innerHTML=`<div class="chart-head"><div><div class="chart-title">Evolucion 6 meses</div><div class="chart-sub">Ingreso base, gastos y pension</div></div><div class="legend"><span><i class="dot income"></i>Ingreso</span><span><i class="dot exp"></i>Gastos</span><span><i class="dot pen"></i>Pension</span></div></div><div class="mini-chart">${rows.map(r=>`<div class="barcol"><div class="bars"><div class="barA" style="height:${Math.max(4,r.inc/max*138)}px"></div><div class="barB" style="height:${Math.max(4,r.exp/max*138)}px"></div><div class="barC" style="height:${Math.max(4,r.pen/max*138)}px"></div></div><div class="barlabel">${monthName(r.m)}</div></div>`).join('')}</div>`;
   }
   function drawCategoryChart(db){
     let box=$('stage2CategoryChart'); if(!box){const ref=$('recentList')?.closest('.card'); if(!ref)return; box=document.createElement('div');box.id='stage2CategoryChart';box.className='card chart-card';ref.parentNode.insertBefore(box,ref.nextSibling)}
     const current=$('month')?.value||new Date().toISOString().slice(0,7);const map={};(db.expenses||[]).filter(x=>ym(x.date)===current).forEach(x=>{map[x.category||'Otros']=(map[x.category||'Otros']||0)+Number(x.amount||0)});const rows=Object.entries(map).sort((a,b)=>b[1]-a[1]);const max=Math.max(1,...rows.map(r=>r[1]));
-    box.innerHTML=`<div class="chart-head"><div><div class="chart-title">Gastos por categoría</div><div class="chart-sub">Mes seleccionado · no incluye seguro complementario</div></div></div><div class="hbar">${rows.length?rows.map(([k,v])=>`<div class="hrow"><div class="hlabel">${k}</div><div class="htrack"><div class="hfill" style="width:${Math.max(4,v/max*100)}%"></div></div><div class="hval">${fmt(v)}</div></div>`).join(''):'<div class="empty">Sin gastos para graficar</div>'}</div>`;
+    box.innerHTML=`<div class="chart-head"><div><div class="chart-title">Gastos por categoria</div><div class="chart-sub">Mes seleccionado - no incluye seguro complementario</div></div></div><div class="hbar">${rows.length?rows.map(([k,v])=>`<div class="hrow"><div class="hlabel">${k}</div><div class="htrack"><div class="hfill" style="width:${Math.max(4,v/max*100)}%"></div></div><div class="hval">${fmt(v)}</div></div>`).join(''):'<div class="empty">Sin gastos para graficar</div>'}</div>`;
   }
   function drawVehicleChart(db){
     const ref=$('vehicleList')?.closest('.card'); if(!ref)return; let box=$('stage2VehicleChart'); if(!box){box=document.createElement('div');box.id='stage2VehicleChart';box.className='card chart-card';ref.parentNode.insertBefore(box,ref)}
     const y=Number($('year')?.value)||new Date().getFullYear();const map={};(db.vehicles||[]).filter(x=>yearOf(x.date)===y).forEach(x=>{map[x.vehicle||'Otro']=(map[x.vehicle||'Otro']||0)+Number(x.amount||0)});const rows=Object.entries(map).sort((a,b)=>b[1]-a[1]);const max=Math.max(1,...rows.map(r=>r[1]));
-    box.innerHTML=`<div class="chart-head"><div><div class="chart-title">Vehículos por año</div><div class="chart-sub">Comparación de gasto por vehículo</div></div></div><div class="hbar">${rows.length?rows.map(([k,v])=>`<div class="hrow"><div class="hlabel">${k}</div><div class="htrack"><div class="hfill" style="width:${Math.max(4,v/max*100)}%"></div></div><div class="hval">${fmt(v)}</div></div>`).join(''):'<div class="empty">Sin datos de vehículos</div>'}</div>`;
+    box.innerHTML=`<div class="chart-head"><div><div class="chart-title">Vehiculos por ano</div><div class="chart-sub">Comparacion de gasto por vehiculo</div></div></div><div class="hbar">${rows.length?rows.map(([k,v])=>`<div class="hrow"><div class="hlabel">${k}</div><div class="htrack"><div class="hfill" style="width:${Math.max(4,v/max*100)}%"></div></div><div class="hval">${fmt(v)}</div></div>`).join(''):'<div class="empty">Sin datos de vehiculos</div>'}</div>`;
   }
   function drawInsuranceChart(db){
     const ref=$('more-insurance'); if(!ref)return; let box=$('stage2InsuranceChart'); if(!box){box=document.createElement('div');box.id='stage2InsuranceChart';box.className='card chart-card';ref.insertBefore(box,ref.children[1]||null)}
@@ -89,10 +89,10 @@
   }
   function banner(db){
     const dash=$('scr-dashboard'); if(!dash||$('stage2Banner'))return;
-    const b=document.createElement('div');b.id='stage2Banner';b.className='stage2-banner';b.innerHTML=`<strong>Datos de prueba para visualizar</strong><p>Incluye sueldos, bono prorrateado, pensión, gastos, vehículos y seguro complementario. Puedes borrarlos después desde Reportes.</p><div class="stage2-actions"><button class="load" id="loadDemoNow">Cargar demo</button><button class="clear" id="skipDemo">Ocultar</button></div>`;dash.insertBefore(b,dash.children[1]||null);
+    const b=document.createElement('div');b.id='stage2Banner';b.className='stage2-banner';b.innerHTML=`<strong>Datos de prueba para visualizar</strong><p>Incluye sueldos, bono prorrateado, pension, gastos, vehiculos y seguro complementario. Puedes cargarlos solo si quieres probar la app vacia.</p><div class="stage2-actions"><button class="load" id="loadDemoNow">Cargar demo</button><button class="clear" id="skipDemo">Ocultar</button></div>`;dash.insertBefore(b,dash.children[1]||null);
     $('loadDemoNow').onclick=()=>{save(demo());location.reload()};$('skipDemo').onclick=()=>b.remove();
   }
   function enhance(){injectStyle();const db=load();if(!hasData(db))banner(db);drawMonthlyChart(db);drawCategoryChart(db);drawVehicleChart(db);drawInsuranceChart(db)}
-  if(!hasData(load()) && !sessionStorage.getItem(STAGE)){sessionStorage.setItem(STAGE,'1');save(demo());location.reload();return;}
+  if(!hasData(load()) && !sessionStorage.getItem(STAGE)){sessionStorage.setItem(STAGE,'1');}
   document.addEventListener('DOMContentLoaded',()=>setTimeout(enhance,250));window.addEventListener('load',()=>setTimeout(enhance,400));document.addEventListener('change',e=>{if(e.target&&['month','year'].includes(e.target.id))setTimeout(enhance,120)},true);new MutationObserver(()=>{clearTimeout(window.__stage2Timer);window.__stage2Timer=setTimeout(enhance,250)}).observe(document.documentElement,{childList:true,subtree:true});setInterval(enhance,2500);
 })();
