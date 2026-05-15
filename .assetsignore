@@ -1,0 +1,13 @@
+.git/
+.github/
+node_modules/
+src/
+functions/
+_deploy_cloudflare/
+*.log
+*.zip
+wallet-token.local
+wallet-sync-cache.json
+server-v2.mjs
+CLOUDFLARE_DEPLOY.md
+wrangler.jsonc
