@@ -69,7 +69,7 @@ async function walletFetch(pathname, token) {
 }
 
 async function syncWallet(request, env) {
-  const token = env.WALLET_API_TOKEN;
+  const token = env.WALLET_API_TOKEN || env.Token || env.TOKEN;
   if (!token) return json({ ok: false, error: 'missing_wallet_token' }, 500);
 
   const url = new URL(request.url);
