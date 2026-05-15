@@ -15,8 +15,9 @@
   <script>
     (async function(){
       try{
-        const r = await fetch('./v2.html?v=stage2-base4', {cache:'no-store'});
+        const r = await fetch('./v2.html?v=stage2-base5', {cache:'no-store'});
         let html = await r.text();
+        html = html.replace(/v2-stage2\.js\?v=\d+/g, 'v2-stage2.js?v=2');
         const walletTag = '<script src="./v2-stage3.js?v=1"></scr' + 'ipt>';
         const stage4Tag = '<script src="./v2-stage4.js?v=1"></scr' + 'ipt>';
         const analysisTag = '<script src="./v2-stage5-analysis.js?v=1"></scr' + 'ipt>';
