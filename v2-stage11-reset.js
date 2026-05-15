@@ -53,8 +53,20 @@
     $('resetAllConfirm').onclick = () => {
       const ok = confirm('Confirmacion final: borrar toda la informacion local de Finanzas Pro en este dispositivo?');
       if (!ok) return;
-      localStorage.removeItem(KEY);
-      sessionStorage.removeItem('stage2-demo-v1');
+      localStorage.setItem(KEY, JSON.stringify({
+        incomes: [],
+        expenses: [],
+        pensions: [],
+        vehicles: [],
+        insurance: [],
+        accounts: [],
+        cards: [],
+        plans: [],
+        imports: [],
+        walletSync: {},
+        settings: { resetAt: new Date().toISOString() }
+      }));
+      sessionStorage.setItem('stage2-demo-v1', '1');
       window.location.reload();
     };
     modal.addEventListener('click', (event) => {
