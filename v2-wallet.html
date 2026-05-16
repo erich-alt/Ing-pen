@@ -15,19 +15,21 @@
   <script>
     (async function(){
       try{
-        const r = await fetch('./v2.html?v=stage2-base6', {cache:'no-store'});
+        const r = await fetch('./v2.html?v=stage2-base7', {cache:'no-store'});
         let html = await r.text();
         html = html.replace(/v2-stage2\.js\?v=\d+/g, 'v2-stage2.js?v=2');
         const walletTag = '<script src="./v2-stage3.js?v=1"></scr' + 'ipt>';
         const stage4Tag = '<script src="./v2-stage4.js?v=1"></scr' + 'ipt>';
-        const analysisTag = '<script src="./v2-stage5-analysis.js?v=1"></scr' + 'ipt>';
+        const analysisTag = '<script src="./v2-stage5-analysis.js?v=2"></scr' + 'ipt>';
         const importTag = '<script src="./v2-stage6-import.js?v=1"></scr' + 'ipt>';
         const proTag = '<script src="./v2-stage7-pro.js?v=2"></scr' + 'ipt>';
         const planningAnalysisTag = '<script src="./v2-stage8-planning-analysis.js?v=2"></scr' + 'ipt>';
         const walletSyncTag = '<script src="./v2-stage9-wallet-sync.js?v=1"></scr' + 'ipt>';
         const cleanupTag = '<script src="./v2-stage10-cleanup.js?v=1"></scr' + 'ipt>';
         const resetTag = '<script src="./v2-stage11-reset.js?v=2"></scr' + 'ipt>';
-        const walletLikeTag = '<script src="./v2-stage12-wallet-like.js?v=1"></scr' + 'ipt>';
+        const walletLikeTag = '<script src="./v2-stage12-wallet-like.js?v=2"></scr' + 'ipt>';
+        html = html.replace(/v2-stage5-analysis\.js\?v=\d+/g, 'v2-stage5-analysis.js?v=2');
+        html = html.replace(/v2-stage12-wallet-like\.js\?v=\d+/g, 'v2-stage12-wallet-like.js?v=2');
         if(!html.includes('v2-stage3.js')) html = html.replace('</body>', walletTag + '\n</body>');
         if(!html.includes('v2-stage4.js')) html = html.replace('</body>', stage4Tag + '\n</body>');
         if(!html.includes('v2-stage5-analysis.js')) html = html.replace('</body>', analysisTag + '\n</body>');
