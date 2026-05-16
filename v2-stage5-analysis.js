@@ -37,27 +37,33 @@
   function childInsurance(db,y){
     return (db.insurance||[]).filter(x=>yearOf(x.date)===y && ['Gracia','Lukas'].includes(x.recipient||''));
   }
+  function setText(id,value){const el=$(id);if(el)el.textContent=value}
   function renderKpis(db,y){
-    const inc=incomeYear(db,y), exp=expensesYear(db,y), pen=pensionYear(db,y);$('anIncome').textContent=fmt(inc);$('anExpenses').textContent=fmt(exp);$('anPension').textContent=fmt(pen);$('anBalance').textContent=fmt(inc-exp-pen);
+    const inc=incomeYear(db,y), exp=expensesYear(db,y), pen=pensionYear(db,y);
+    setText('anIncome',fmt(inc));setText('anExpenses',fmt(exp));setText('anPension',fmt(pen));setText('anBalance',fmt(inc-exp-pen));
   }
   function renderBars(db,y){
     const months=Array.from({length:12},(_,i)=>`${y}-${String(i+1).padStart(2,'0')}`);
     const data=months.map(m=>({m,inc:(db.incomes||[]).filter(x=>ym(x.date)===m).reduce((a,x)=>a+Number(x.net||0),0),exp:(db.expenses||[]).filter(x=>ym(x.date)===m).reduce((a,x)=>a+Number(x.amount||0),0),pen:(db.pensions||[]).filter(x=>x.month===m).reduce((a,x)=>a+Number(x.amount||0),0)}));
     const max=Math.max(1,...data.map(d=>Math.max(d.inc,d.exp+d.pen)));
-    $('anAnnualBars').innerHTML=`<div class="annual-bars">${data.map((d,i)=>{const incH=Math.max(2,d.inc/max*140);const expH=Math.max(0,d.exp/max*140);const penH=Math.max(0,d.pen/max*140);return `<div class="annual-bar"><div class="annual-stack"><div class="seg-inc" style="height:${incH}px"></div><div class="seg-exp" style="height:${expH}px"></div><div class="seg-pen" style="height:${penH}px"></div></div><div class="annual-label">${monthNames[i]}</div></div>`}).join('')}</div><div class="analysis-legend"><span><i class="analysis-dot d-inc"></i>Ingresos</span><span><i class="analysis-dot d-exp"></i>Gastos</span><span><i class="analysis-dot d-pen"></i>Pensión</span></div>`;
+    const el=$('anAnnualBars');if(!el)return;
+    el.innerHTML=`<div class="annual-bars">${data.map((d,i)=>{const incH=Math.max(2,d.inc/max*140);const expH=Math.max(0,d.exp/max*140);const penH=Math.max(0,d.pen/max*140);return `<div class="annual-bar"><div class="annual-stack"><div class="seg-inc" style="height:${incH}px"></div><div class="seg-exp" style="height:${expH}px"></div><div class="seg-pen" style="height:${penH}px"></div></div><div class="annual-label">${monthNames[i]}</div></div>`}).join('')}</div><div class="analysis-legend"><span><i class="analysis-dot d-inc"></i>Ingresos</span><span><i class="analysis-dot d-exp"></i>Gastos</span><span><i class="analysis-dot d-pen"></i>Pensión</span></div>`;
   }
   function renderCategories(db,y){
     const map={};(db.expenses||[]).filter(x=>yearOf(x.date)===y).forEach(x=>{map[x.category||'Otros']=(map[x.category||'Otros']||0)+Number(x.amount||0)});
     const rows=Object.entries(map).sort((a,b)=>b[1]-a[1]);const max=Math.max(1,...rows.map(r=>r[1]));
-    $('anCategories').innerHTML=rows.length?rows.map(([k,v])=>`<div class="analysis-row"><div class="name">${k}</div><div class="track"><div class="fill" style="width:${Math.max(4,v/max*100)}%"></div></div><div class="val">${fmt(v)}</div></div>`).join(''):'<div class="empty">Sin gastos por categoría</div>';
+    const el=$('anCategories');if(!el)return;
+    el.innerHTML=rows.length?rows.map(([k,v])=>`<div class="analysis-row"><div class="name">${k}</div><div class="track"><div class="fill" style="width:${Math.max(4,v/max*100)}%"></div></div><div class="val">${fmt(v)}</div></div>`).join(''):'<div class="empty">Sin gastos por categoría</div>';
   }
   function renderChildren(db,y){
+    const el=$('anChildren');if(!el)return;
     const pens=pensionYear(db,y);const ins=childInsurance(db,y);const cost=ins.reduce((a,x)=>a+Number(x.cost||0),0);const refund=ins.reduce((a,x)=>a+Number(x.refund||0),0);const net=cost-refund;const byChild={Gracia:{cost:0,refund:0},Lukas:{cost:0,refund:0}};ins.forEach(x=>{const r=x.recipient||'Gracia';if(!byChild[r])byChild[r]={cost:0,refund:0};byChild[r].cost+=Number(x.cost||0);byChild[r].refund+=Number(x.refund||0)});
-    $('anChildren').innerHTML=`<div class="analysis-grid"><div class="analysis-kpi danger"><div class="analysis-label">Pensión anual</div><div class="analysis-value">${fmt(pens)}</div></div><div class="analysis-kpi warn"><div class="analysis-label">Costo salud niños</div><div class="analysis-value">${fmt(cost)}</div></div><div class="analysis-kpi"><div class="analysis-label">Reembolsos seguro</div><div class="analysis-value">${fmt(refund)}</div></div><div class="analysis-kpi"><div class="analysis-label">Costo neto salud</div><div class="analysis-value">${fmt(net)}</div></div></div><div style="margin-top:12px">${Object.entries(byChild).map(([k,v])=>`<span class="child-pill">${k}: ${fmt(v.cost-v.refund)} neto</span>`).join('')}</div><div class="row"><div><div class="rtitle">Total niños anual</div><div class="rsub">Pensión + costo neto salud</div></div><div class="rval">${fmt(pens+net)}</div></div>`;
+    el.innerHTML=`<div class="analysis-grid"><div class="analysis-kpi danger"><div class="analysis-label">Pensión anual</div><div class="analysis-value">${fmt(pens)}</div></div><div class="analysis-kpi warn"><div class="analysis-label">Costo salud niños</div><div class="analysis-value">${fmt(cost)}</div></div><div class="analysis-kpi"><div class="analysis-label">Reembolsos seguro</div><div class="analysis-value">${fmt(refund)}</div></div><div class="analysis-kpi"><div class="analysis-label">Costo neto salud</div><div class="analysis-value">${fmt(net)}</div></div></div><div style="margin-top:12px">${Object.entries(byChild).map(([k,v])=>`<span class="child-pill">${k}: ${fmt(v.cost-v.refund)} neto</span>`).join('')}</div><div class="row"><div><div class="rtitle">Total niños anual</div><div class="rsub">Pensión + costo neto salud</div></div><div class="rval">${fmt(pens+net)}</div></div>`;
   }
   function renderMonthlyKids(db,y){
+    const el=$('anMonthlyKids');if(!el)return;
     const lines=Array.from({length:12},(_,i)=>{const m=`${y}-${String(i+1).padStart(2,'0')}`;const pen=(db.pensions||[]).filter(x=>x.month===m).reduce((a,x)=>a+Number(x.amount||0),0);const ins=childInsurance(db,y).filter(x=>ym(x.date)===m);const refund=ins.reduce((a,x)=>a+Number(x.refund||0),0);const cost=ins.reduce((a,x)=>a+Number(x.cost||0),0);const net=cost-refund;return{m,pen,refund,net,total:pen+net};});
-    $('anMonthlyKids').innerHTML=`<div class="month-table">${lines.map((x,i)=>`<div class="month-line"><strong>${monthNames[i]}</strong><div><span>Pensión</span><b>${fmt(x.pen)}</b></div><div><span>Seguro neto</span><b>${fmt(x.net)}</b></div><div><span>Total</span><b>${fmt(x.total)}</b></div></div>`).join('')}</div>`;
+    el.innerHTML=`<div class="month-table">${lines.map((x,i)=>`<div class="month-line"><strong>${monthNames[i]}</strong><div><span>Pensión</span><b>${fmt(x.pen)}</b></div><div><span>Seguro neto</span><b>${fmt(x.net)}</b></div><div><span>Total</span><b>${fmt(x.total)}</b></div></div>`).join('')}</div>`;
   }
   function render(){const db=load();const y=selectedYear();if(!$('more-analysis'))return;renderKpis(db,y);renderBars(db,y);renderCategories(db,y);renderChildren(db,y);renderMonthlyKids(db,y)}
   function apply(){injectStyle();ensureTab();render()}
