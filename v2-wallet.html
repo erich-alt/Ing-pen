@@ -15,8 +15,9 @@
   <script>
     (async function(){
       try{
-        const r = await fetch('./v2.html?v=stage2-base8', {cache:'no-store'});
+        const r = await fetch('./v2.html?v=stage2-base9', {cache:'no-store'});
         let html = await r.text();
+        const preflight = '<script>(function(){try{var k="finanzas_pro_v2";var db=JSON.parse(localStorage.getItem(k)||"{}");["incomes","expenses","pensions","vehicles","insurance","accounts","cards","imports"].forEach(function(x){if(!Array.isArray(db[x]))db[x]=[]});db.settings=db.settings||{};localStorage.setItem(k,JSON.stringify(db));}catch(e){}})();</scr' + 'ipt>';
         html = html.replace(/v2-stage2\.js\?v=\d+/g, 'v2-stage2.js?v=2');
         const walletTag = '<script src="./v2-stage3.js?v=1"></scr' + 'ipt>';
         const stage4Tag = '<script src="./v2-stage4.js?v=1"></scr' + 'ipt>';
@@ -32,6 +33,7 @@
         html = html.replace(/v2-stage5-analysis\.js\?v=\d+/g, 'v2-stage5-analysis.js?v=2');
         html = html.replace(/v2-stage12-wallet-like\.js\?v=\d+/g, 'v2-stage12-wallet-like.js?v=2');
         html = html.replace(/v2-stage13-dashboard-actions\.js\?v=\d+/g, 'v2-stage13-dashboard-actions.js?v=1');
+        if(!html.includes('finanzas_pro_v2";var db')) html = html.replace('<script>\nconst KEY', preflight + '\n<script>\nconst KEY');
         if(!html.includes('v2-stage3.js')) html = html.replace('</body>', walletTag + '\n</body>');
         if(!html.includes('v2-stage4.js')) html = html.replace('</body>', stage4Tag + '\n</body>');
         if(!html.includes('v2-stage5-analysis.js')) html = html.replace('</body>', analysisTag + '\n</body>');
