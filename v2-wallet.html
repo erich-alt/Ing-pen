@@ -15,7 +15,7 @@
   <script>
     (async function(){
       try{
-        const r = await fetch('./v2.html?v=stage2-base7', {cache:'no-store'});
+        const r = await fetch('./v2.html?v=stage2-base8', {cache:'no-store'});
         let html = await r.text();
         html = html.replace(/v2-stage2\.js\?v=\d+/g, 'v2-stage2.js?v=2');
         const walletTag = '<script src="./v2-stage3.js?v=1"></scr' + 'ipt>';
@@ -28,8 +28,10 @@
         const cleanupTag = '<script src="./v2-stage10-cleanup.js?v=1"></scr' + 'ipt>';
         const resetTag = '<script src="./v2-stage11-reset.js?v=2"></scr' + 'ipt>';
         const walletLikeTag = '<script src="./v2-stage12-wallet-like.js?v=2"></scr' + 'ipt>';
+        const actionTag = '<script src="./v2-stage13-dashboard-actions.js?v=1"></scr' + 'ipt>';
         html = html.replace(/v2-stage5-analysis\.js\?v=\d+/g, 'v2-stage5-analysis.js?v=2');
         html = html.replace(/v2-stage12-wallet-like\.js\?v=\d+/g, 'v2-stage12-wallet-like.js?v=2');
+        html = html.replace(/v2-stage13-dashboard-actions\.js\?v=\d+/g, 'v2-stage13-dashboard-actions.js?v=1');
         if(!html.includes('v2-stage3.js')) html = html.replace('</body>', walletTag + '\n</body>');
         if(!html.includes('v2-stage4.js')) html = html.replace('</body>', stage4Tag + '\n</body>');
         if(!html.includes('v2-stage5-analysis.js')) html = html.replace('</body>', analysisTag + '\n</body>');
@@ -40,6 +42,7 @@
         if(!html.includes('v2-stage10-cleanup.js')) html = html.replace('</body>', cleanupTag + '\n</body>');
         if(!html.includes('v2-stage11-reset.js')) html = html.replace('</body>', resetTag + '\n</body>');
         if(!html.includes('v2-stage12-wallet-like.js')) html = html.replace('</body>', walletLikeTag + '\n</body>');
+        if(!html.includes('v2-stage13-dashboard-actions.js')) html = html.replace('</body>', actionTag + '\n</body>');
         document.open(); document.write(html); document.close();
       }catch(e){
         document.body.innerHTML = '<div class="loading">No se pudo cargar la app. Revisa conexion e intenta de nuevo.</div>';
