@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "ing-pen",
+  "name": "finanzas",
   "main": "./src/index.js",
   "compatibility_date": "2026-05-15",
   "assets": {
