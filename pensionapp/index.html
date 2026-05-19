@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PensionApp Chile</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Prototipo navegable</p>
+        <h1>PensionApp Chile</h1>
+      </div>
+      <nav aria-label="Navegacion principal">
+        <a href="#alimentante">Alimentante</a>
+        <a href="#pagos">Pagos</a>
+        <a href="#tribunal">Tribunal</a>
+        <a href="#receptor">Receptor</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Pago y control de pension de alimentos</p>
+          <h2 id="hero-title">Un lugar simple para calcular, pagar, comprobar y auditar pensiones.</h2>
+          <p>
+            El prototipo permite revisar el flujo del alimentante, cargar antecedentes de la causa,
+            calcular obligaciones en UTM, UF, pesos o IPC, pagar por medios digitales y mantener
+            visibilidad para tribunal y receptor.
+          </p>
+        </div>
+        <div class="hero-panel" aria-label="Resumen del mes">
+          <span>Mes en curso</span>
+          <strong id="currentAmount">$1.384.004</strong>
+          <small>Equivalente a 21,1108 UTM</small>
+          <button data-action="pay">Pagar pension</button>
+        </div>
+      </section>
+
+      <section id="alimentante" class="band">
+        <div class="section-title">
+          <p class="eyebrow">Perfil alimentante</p>
+          <h2>Datos de la causa y monto actualizado</h2>
+        </div>
+        <div class="grid two">
+          <article class="panel">
+            <h3>Lectura inicial del PDF</h3>
+            <div class="upload-box">
+              <span>Subir PDF de causa</span>
+              <small>Extrae rol, tribunal, moneda pactada, monto, reajuste y beneficiarios.</small>
+            </div>
+            <dl>
+              <div><dt>Tribunal</dt><dd>2do Juzgado de Familia de Santiago</dd></div>
+              <div><dt>Rol causa</dt><dd>C-0000-2026</dd></div>
+              <div><dt>Moneda</dt><dd>UTM</dd></div>
+              <div><dt>Monto fijado</dt><dd>21,1108 UTM mensuales</dd></div>
+            </dl>
+          </article>
+          <article class="panel">
+            <h3>Calculadora de pension</h3>
+            <label>
+              Monto fijado
+              <input id="baseValue" type="number" value="21.1108" step="0.0001" />
+            </label>
+            <label>
+              Indice
+              <select id="currency">
+                <option value="utm">UTM</option>
+                <option value="uf">UF</option>
+                <option value="clp">Pesos</option>
+                <option value="ipc">IPC</option>
+              </select>
+            </label>
+            <div class="result">
+              <span>Monto estimado a pagar</span>
+              <strong id="calcResult">$1.384.004</strong>
+              <small>Actualizable cuando SII publique el valor del mes siguiente.</small>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="pagos" class="band">
+        <div class="section-title">
+          <p class="eyebrow">Pagos y deuda</p>
+          <h2>Pago en linea, historial y comprobantes</h2>
+        </div>
+        <div class="grid three">
+          <article class="panel compact">
+            <h3>Khipu</h3>
+            <p>Transferencia bancaria de bajo costo para pagos recurrentes.</p>
+            <button data-action="pay">Pagar con Khipu</button>
+          </article>
+          <article class="panel compact">
+            <h3>Tarjeta</h3>
+            <p>Credito en una cuota para quienes quieren acumular puntos.</p>
+            <button data-action="card">Pagar con tarjeta</button>
+          </article>
+          <article class="panel compact">
+            <h3>Comprobantes</h3>
+            <p>Subida de pagos previos para imputar contra deuda alimenticia.</p>
+            <button data-action="receipt">Subir comprobante</button>
+          </article>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Monto CLP</th>
+                <th>Equivalencia</th>
+                <th>Banco</th>
+                <th>Medio</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="paymentRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tribunal" class="band">
+        <div class="section-title">
+          <p class="eyebrow">Tribunal de familia</p>
+          <h2>Conciliacion diaria y control de morosidad</h2>
+        </div>
+        <div class="dashboard">
+          <div><span>Pagos de hoy</span><strong>138</strong></div>
+          <div><span>Movimientos BancoEstado</span><strong>214</strong></div>
+          <div><span>Morosos activos</span><strong>42</strong></div>
+          <div><span>Interes diario aplicado</span><strong>0,03%</strong></div>
+        </div>
+        <article class="panel">
+          <h3>Revision de libretas de familia</h3>
+          <p>
+            El sistema consulta movimientos diarios, cruza montos dentro de un rango permitido,
+            registra pagos coincidentes y deja excepciones para revision manual.
+          </p>
+        </article>
+      </section>
+
+      <section id="receptor" class="band">
+        <div class="section-title">
+          <p class="eyebrow">Receptor de pago</p>
+          <h2>Confirmaciones y trazabilidad</h2>
+        </div>
+        <div class="grid two">
+          <article class="panel">
+            <h3>Notificaciones automaticas</h3>
+            <p>
+              Cada pago genera correo al beneficiario y al alimentante con monto en CLP,
+              equivalencia en la moneda pactada, fecha, medio de pago y proximo reajuste.
+            </p>
+          </article>
+          <article class="panel">
+            <h3>Estado de deuda</h3>
+            <p>
+              La deuda acumula interes diario segun lo definido por tribunal y se reduce con
+              pagos conciliados o comprobantes aprobados.
+            </p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="modal">
+      <form method="dialog">
+        <h3 id="modalTitle">Accion</h3>
+        <p id="modalText">Esta accion quedara disponible al conectar el proveedor real.</p>
+        <button>Cerrar</button>
+      </form>
+    </dialog>
+
+    <script src="app.js"></script>
+  </body>
+</html>
